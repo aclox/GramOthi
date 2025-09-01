@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: gramothi_postgres
+    environment:
+      POSTGRES_DB: gramothi
+      POSTGRES_USER: gramothi_user
+      POSTGRES_PASSWORD: gramothi_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gramothi_user -d gramothi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gramothi_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # GramOthi Backend
+  backend:
+    build: .
+    container_name: gramothi_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://gramothi_user:gramothi_password@postgres:5432/gramothi
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=your-super-secret-key-change-this-in-production
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - MAX_FILE_SIZE=10485760
+      - UPLOAD_DIR=uploads
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: gramothi_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  redis_data:

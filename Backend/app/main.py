@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
-from .routes import auth, class_routes, quiz, live
+from .routes import auth, quiz, live
+import importlib
+class_routes = importlib.import_module('.routes.class', package='app')
 from .database import get_db
 from .init_db import init_db
 

@@ -132,6 +132,159 @@ function getAdaptiveConfig(bandwidth, qualityMetrics, contentType) {
   };
 }
 
+// Video Quality Presets
+const VIDEO_QUALITY_PRESETS = {
+  ultra_low: {
+    resolution: '320x240',
+    bitrate: '50k',
+    fps: 5,
+    crf: 35,
+    preset: 'ultrafast',
+    description: 'Ultra Low - Emergency mode for very poor connections'
+  },
+  low: {
+    resolution: '480x360',
+    bitrate: '100k',
+    fps: 10,
+    crf: 32,
+    preset: 'ultrafast',
+    description: 'Low - Basic quality for poor connections'
+  },
+  medium: {
+    resolution: '640x480',
+    bitrate: '200k',
+    fps: 15,
+    crf: 28,
+    preset: 'fast',
+    description: 'Medium - Balanced quality and bandwidth'
+  },
+  high: {
+    resolution: '854x480',
+    bitrate: '400k',
+    fps: 24,
+    crf: 25,
+    preset: 'medium',
+    description: 'High - Good quality for stable connections'
+  },
+  very_high: {
+    resolution: '1280x720',
+    bitrate: '800k',
+    fps: 30,
+    crf: 22,
+    preset: 'slow',
+    description: 'Very High - Excellent quality for good connections'
+  },
+  ultra_high: {
+    resolution: '1920x1080',
+    bitrate: '1500k',
+    fps: 30,
+    crf: 20,
+    preset: 'slower',
+    description: 'Ultra High - Best quality for excellent connections'
+  }
+};
+
+/**
+ * Get video quality configuration
+ */
+function getVideoQualityConfig(qualityPreset, customSettings) {
+  if (customSettings) {
+    return {
+      preset: 'custom',
+      settings: customSettings,
+      isCustom: true
+    };
+  }
+  
+  const preset = VIDEO_QUALITY_PRESETS[qualityPreset] || VIDEO_QUALITY_PRESETS.medium;
+  
+  return {
+    preset: qualityPreset,
+    settings: preset,
+    isCustom: false
+  };
+}
+
+/**
+ * Get video quality recommendations based on network conditions
+ */
+function getVideoQualityRecommendations(networkConditions) {
+  const { latency, bandwidth, packetLoss } = networkConditions;
+  
+  const recommendations = [];
+  
+  // Analyze each preset for suitability
+  for (const [presetName, presetSettings] of Object.entries(VIDEO_QUALITY_PRESETS)) {
+    const suitabilityScore = calculatePresetSuitability(presetSettings, latency, bandwidth, packetLoss);
+    
+    recommendations.push({
+      preset: presetName,
+      settings: presetSettings,
+      suitabilityScore: suitabilityScore,
+      recommended: suitabilityScore >= 80
+    });
+  }
+  
+  // Sort by suitability score
+  recommendations.sort((a, b) => b.suitabilityScore - a.suitabilityScore);
+  
+  return {
+    recommendations: recommendations,
+    topRecommendation: recommendations[0],
+    networkConditions: networkConditions
+  };
+}
+
+/**
+ * Calculate how suitable a preset is for given network conditions
+ */
+function calculatePresetSuitability(presetSettings, latency, bandwidth, packetLoss) {
+  try {
+    // Extract preset parameters
+    const bitrateStr = presetSettings.bitrate;
+    const bitrateValue = parseInt(bitrateStr.replace('k', '').replace('M', '000'));
+    const fps = presetSettings.fps;
+    const resolution = presetSettings.resolution;
+    
+    // Calculate resolution complexity
+    const [width, height] = resolution.split('x').map(Number);
+    const pixelCount = width * height;
+    
+    // Calculate suitability score (0-100)
+    let score = 100;
+    
+    // Penalty for high bitrate on low bandwidth
+    if (bandwidth < bitrateValue * 1.5) {
+      score -= 30;
+    }
+    
+    // Penalty for high FPS on high latency
+    if (latency > 200 && fps > 20) {
+      score -= 20;
+    }
+    
+    // Penalty for high resolution on poor network
+    if (packetLoss > 2 && pixelCount > 640 * 480) {
+      score -= 25;
+    }
+    
+    // Bonus for appropriate settings
+    if (latency < 100 && fps >= 24) {
+      score += 10;
+    }
+    
+    if (packetLoss < 1 && pixelCount >= 1280 * 720) {
+      score += 15;
+    }
+    
+    return Math.max(0, Math.min(100, score));
+    
+  } catch (error) {
+    console.error('Error calculating preset suitability:', error);
+    return 50; // Default moderate suitability
+  }
+}
+
 // Add TURN servers to ICE servers if configured
 if (process.env.TURN_SERVERS) {
   CONFIG.ICE_SERVERS.push(...JSON.parse(process.env.TURN_SERVERS));
@@ -391,6 +544,50 @@ io.on('connection', async (socket) => {
     
     socket.emit('adaptive-config', {
       config: adaptiveConfig,
+      timestamp: Date.now()
+    });
+  });
+
+  // Handle video quality adjustment requests
+  socket.on('adjust-video-quality', (data) => {
+    const { classId, qualityPreset, customSettings } = data;
+    
+    // Get video quality configuration
+    const videoQualityConfig = getVideoQualityConfig(qualityPreset, customSettings);
+    
+    // Broadcast quality change to all users in the class
+    const roomUsers = classRooms.get(classId);
+    if (roomUsers) {
+      roomUsers.forEach(userId => {
+        const userSocket = userConnections.get(userId);
+        if (userSocket) {
+          userSocket.emit('video-quality-change', {
+            userId: socket.userId,
+            qualityPreset: qualityPreset,
+            settings: videoQualityConfig,
+            timestamp: Date.now()
+          });
+        }
+      });
+    }
+    
+    // Store user's video quality preference
+    socket.videoQuality = {
+      preset: qualityPreset,
+      settings: videoQualityConfig,
+      lastUpdated: Date.now()
+    };
+  });
+
+  // Handle video quality recommendations request
+  socket.on('request-video-quality-recommendations', (data) => {
+    const { classId, networkConditions } = data;
+    
+    // Get video quality recommendations based on network conditions
+    const recommendations = getVideoQualityRecommendations(networkConditions);
+    
+    socket.emit('video-quality-recommendations', {
+      recommendations: recommendations,
       timestamp: Date.now()
     });
   });

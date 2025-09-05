@@ -13,6 +13,7 @@ from ..schemas import (
 )
 from ..routes.auth import get_current_user, get_current_teacher
 from ..services.webrtc_service import webrtc_service
+from ..services.video_quality_service import video_quality_service
 from datetime import datetime
 import json
 import logging
@@ -368,6 +369,147 @@ async def streaming_websocket_endpoint(
     except WebSocketDisconnect:
         streaming_manager.disconnect(websocket, class_id)
         logger.info(f"User disconnected from streaming session for class {class_id}")
+
+# Video Quality Management
+@router.get("/video-quality/presets")
+async def get_video_quality_presets():
+    """Get all available video quality presets."""
+    try:
+        presets = await video_quality_service.get_available_quality_presets()
+        return presets
+        
+    except Exception as e:
+        logger.error(f"Failed to get video quality presets: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get video quality presets: {str(e)}"
+        )
+
+@router.get("/video-quality/current")
+async def get_current_video_quality(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current video quality settings for the user."""
+    try:
+        quality = await video_quality_service.get_video_quality(current_user.id)
+        return quality
+        
+    except Exception as e:
+        logger.error(f"Failed to get current video quality: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get current video quality: {str(e)}"
+        )
+
+@router.post("/video-quality/set")
+async def set_video_quality(
+    quality_preset: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Set video quality preset for the user."""
+    try:
+        result = await video_quality_service.set_video_quality(
+            user_id=current_user.id,
+            quality_preset=quality_preset
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to set video quality: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to set video quality: {str(e)}"
+        )
+
+@router.post("/video-quality/custom")
+async def create_custom_video_quality(
+    resolution: str,
+    bitrate: str,
+    fps: int,
+    crf: int,
+    preset: str = "medium",
+    current_user: User = Depends(get_current_user)
+):
+    """Create custom video quality settings."""
+    try:
+        result = await video_quality_service.create_custom_quality_settings(
+            user_id=current_user.id,
+            resolution=resolution,
+            bitrate=bitrate,
+            fps=fps,
+            crf=crf,
+            preset=preset
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to create custom video quality: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create custom video quality: {str(e)}"
+        )
+
+@router.get("/video-quality/history")
+async def get_video_quality_history(
+    current_user: User = Depends(get_current_user)
+):
+    """Get video quality change history for the user."""
+    try:
+        history = await video_quality_service.get_quality_history(current_user.id)
+        return history
+        
+    except Exception as e:
+        logger.error(f"Failed to get video quality history: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get video quality history: {str(e)}"
+        )
+
+@router.post("/video-quality/auto-adjust")
+async def auto_adjust_video_quality(
+    network_quality_score: float,
+    current_bandwidth: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Automatically adjust video quality based on network conditions."""
+    try:
+        result = await video_quality_service.adjust_quality_for_network(
+            user_id=current_user.id,
+            network_quality_score=network_quality_score,
+            current_bandwidth=current_bandwidth
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to auto-adjust video quality: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to auto-adjust video quality: {str(e)}"
+        )
+
+@router.post("/video-quality/recommendations")
+async def get_video_quality_recommendations(
+    network_conditions: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Get video quality recommendations based on network conditions."""
+    try:
+        recommendations = await video_quality_service.get_quality_recommendations(
+            user_id=current_user.id,
+            network_conditions=network_conditions
+        )
+        
+        return recommendations
+        
+    except Exception as e:
+        logger.error(f"Failed to get video quality recommendations: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get video quality recommendations: {str(e)}"
+        )
 
 # ICE Servers Configuration
 @router.get("/ice-servers")

@@ -6,7 +6,7 @@ Handles audio, image, and document compression for rural connectivity
 import os
 import subprocess
 import tempfile
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 from PIL import Image
 import ffmpeg
 import logging
@@ -112,6 +112,118 @@ class CompressionService:
     }
     
     @staticmethod
+    def get_video_quality_presets() -> Dict[str, Dict[str, Any]]:
+        """Get predefined video quality presets for manual adjustment."""
+        return {
+            "ultra_low": {
+                "resolution": "320x240",
+                "bitrate": "50k",
+                "fps": 5,
+                "crf": 35,
+                "preset": "ultrafast",
+                "description": "Ultra Low - Emergency mode for very poor connections"
+            },
+            "low": {
+                "resolution": "480x360",
+                "bitrate": "100k",
+                "fps": 10,
+                "crf": 32,
+                "preset": "ultrafast",
+                "description": "Low - Basic quality for poor connections"
+            },
+            "medium": {
+                "resolution": "640x480",
+                "bitrate": "200k",
+                "fps": 15,
+                "crf": 28,
+                "preset": "fast",
+                "description": "Medium - Balanced quality and bandwidth"
+            },
+            "high": {
+                "resolution": "854x480",
+                "bitrate": "400k",
+                "fps": 24,
+                "crf": 25,
+                "preset": "medium",
+                "description": "High - Good quality for stable connections"
+            },
+            "very_high": {
+                "resolution": "1280x720",
+                "bitrate": "800k",
+                "fps": 30,
+                "crf": 22,
+                "preset": "slow",
+                "description": "Very High - Excellent quality for good connections"
+            },
+            "ultra_high": {
+                "resolution": "1920x1080",
+                "bitrate": "1500k",
+                "fps": 30,
+                "crf": 20,
+                "preset": "slower",
+                "description": "Ultra High - Best quality for excellent connections"
+            }
+        }
+
+    @staticmethod
+    def compress_video_with_quality(
+        input_path: str, 
+        output_path: str, 
+        quality_preset: str = "medium",
+        custom_settings: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """
+        Compress video with specific quality settings.
+        
+        Args:
+            input_path: Path to input video file
+            output_path: Path to output video file
+            quality_preset: Quality preset name or custom settings
+            custom_settings: Custom quality settings to override preset
+        """
+        try:
+            # Get quality settings
+            if custom_settings:
+                settings = custom_settings
+            else:
+                presets = CompressionService.get_video_quality_presets()
+                if quality_preset not in presets:
+                    quality_preset = "medium"
+                settings = presets[quality_preset]
+            
+            # Build ffmpeg command with quality settings
+            cmd = [
+                'ffmpeg', '-i', input_path,
+                '-c:v', 'libx264',
+                '-preset', settings.get('preset', 'medium'),
+                '-crf', str(settings.get('crf', 28)),
+                '-maxrate', settings.get('bitrate', '400k'),
+                '-bufsize', str(int(settings.get('bitrate', '400k').replace('k', '')) * 2) + 'k',
+                '-vf', f"scale={settings.get('resolution', '854x480')},fps={settings.get('fps', 24)}",
+                '-c:a', 'libopus',
+                '-b:a', '64k',  # Fixed audio bitrate
+                '-ar', '44100',
+                '-ac', '2',
+                '-movflags', '+faststart',
+                '-f', 'mp4',
+                '-y',
+                output_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                logger.info(f"Video compressed with quality preset '{quality_preset}': {input_path} -> {output_path}")
+                return True
+            else:
+                logger.error(f"Video compression failed: {result.stderr}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error compressing video with quality settings: {str(e)}")
+            return False
+
+    @staticmethod
     def compress_video(input_path: str, output_path: str, bandwidth_profile: str = "low") -> bool:
         """
         Compress video file using ffmpeg with advanced optimization for poor networks.
@@ -154,7 +266,7 @@ class CompressionService:
         except Exception as e:
             logger.error(f"Error compressing video: {str(e)}")
             return False
-
+    
     @staticmethod
     def compress_audio(input_path: str, output_path: str, bandwidth_profile: str = "low") -> bool:
         """

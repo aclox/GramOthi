@@ -121,6 +121,57 @@
     </div>
 
     <div class="container">
+        <h2>Video Quality Controls</h2>
+        <div class="video-quality-controls">
+            <div class="quality-preset-selector">
+                <label for="videoQuality">Video Quality Preset:</label>
+                <select id="videoQuality">
+                    <option value="ultra_low">Ultra Low (320x240, 5fps)</option>
+                    <option value="low">Low (480x360, 10fps)</option>
+                    <option value="medium" selected>Medium (640x480, 15fps)</option>
+                    <option value="high">High (854x480, 24fps)</option>
+                    <option value="very_high">Very High (1280x720, 30fps)</option>
+                    <option value="ultra_high">Ultra High (1920x1080, 30fps)</option>
+                </select>
+                <button id="applyQualityBtn" class="btn-primary" disabled>Apply Quality</button>
+            </div>
+            
+            <div class="custom-quality-settings" style="margin-top: 15px; display: none;">
+                <h4>Custom Quality Settings</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="customResolution">Resolution:</label>
+                        <input type="text" id="customResolution" placeholder="1280x720" value="1280x720">
+                    </div>
+                    <div>
+                        <label for="customBitrate">Bitrate:</label>
+                        <input type="text" id="customBitrate" placeholder="500k" value="500k">
+                    </div>
+                    <div>
+                        <label for="customFps">FPS:</label>
+                        <input type="number" id="customFps" placeholder="30" value="30" min="1" max="60">
+                    </div>
+                    <div>
+                        <label for="customCrf">CRF (Quality):</label>
+                        <input type="number" id="customCrf" placeholder="23" value="23" min="18" max="51">
+                    </div>
+                </div>
+                <button id="applyCustomBtn" class="btn-primary" disabled>Apply Custom</button>
+            </div>
+            
+            <div class="quality-actions" style="margin-top: 15px;">
+                <button id="getRecommendationsBtn" class="btn-warning" disabled>Get Recommendations</button>
+                <button id="autoAdjustBtn" class="btn-success" disabled>Auto Adjust</button>
+                <button id="showCustomBtn" class="btn-primary">Show Custom Settings</button>
+            </div>
+            
+            <div id="qualityStatus" class="status disconnected" style="margin-top: 10px;">
+                Video Quality: Medium (640x480, 15fps)
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
         <h2>Slide Synchronization</h2>
         <div class="controls">
             <button id="prevSlideBtn" class="btn-primary" disabled>Previous Slide</button>
@@ -177,6 +228,20 @@
         const bandwidthSelect = document.getElementById('bandwidth');
         const detectQualityBtn = document.getElementById('detectQualityBtn');
         const qualityStatusEl = document.getElementById('qualityStatus');
+        
+        // Video quality controls
+        const videoQualitySelect = document.getElementById('videoQuality');
+        const applyQualityBtn = document.getElementById('applyQualityBtn');
+        const customQualitySettings = document.querySelector('.custom-quality-settings');
+        const showCustomBtn = document.getElementById('showCustomBtn');
+        const applyCustomBtn = document.getElementById('applyCustomBtn');
+        const getRecommendationsBtn = document.getElementById('getRecommendationsBtn');
+        const autoAdjustBtn = document.getElementById('autoAdjustBtn');
+        const customResolution = document.getElementById('customResolution');
+        const customBitrate = document.getElementById('customBitrate');
+        const customFps = document.getElementById('customFps');
+        const customCrf = document.getElementById('customCrf');
+        const videoQualityStatus = document.getElementById('qualityStatus');
 
         // Utility functions
         function log(message) {
@@ -200,6 +265,12 @@
             nextSlideBtn.disabled = !isConnected;
             gotoSlideBtn.disabled = !isConnected;
             detectQualityBtn.disabled = !isConnected;
+            
+            // Video quality controls
+            applyQualityBtn.disabled = !isConnected;
+            applyCustomBtn.disabled = !isConnected;
+            getRecommendationsBtn.disabled = !isConnected;
+            autoAdjustBtn.disabled = !isConnected;
         }
 
         // WebRTC functions
@@ -339,6 +410,16 @@
             socket.on('adaptive-config', (data) => {
                 log(`Received adaptive config: ${JSON.stringify(data.config)}`);
                 applyAdaptiveConfig(data.config);
+            });
+
+            socket.on('video-quality-change', (data) => {
+                log(`Video quality changed: ${data.qualityPreset} by user ${data.userId}`);
+                updateVideoQualityStatus(data.qualityPreset, data.settings);
+            });
+
+            socket.on('video-quality-recommendations', (data) => {
+                log(`Received video quality recommendations: ${JSON.stringify(data.recommendations)}`);
+                displayVideoQualityRecommendations(data.recommendations);
             });
 
             socket.on('disconnect', () => {
@@ -594,6 +675,162 @@
             updateQualityStatus(config.profile);
         }
 
+        // Video Quality Control Functions
+        async function applyVideoQuality() {
+            try {
+                const qualityPreset = videoQualitySelect.value;
+                log(`Applying video quality preset: ${qualityPreset}`);
+                
+                if (socket && isConnected) {
+                    socket.emit('adjust-video-quality', {
+                        classId: CONFIG.classId,
+                        qualityPreset: qualityPreset
+                    });
+                }
+                
+                updateVideoQualityStatus(qualityPreset);
+                
+            } catch (error) {
+                log(`Failed to apply video quality: ${error.message}`);
+            }
+        }
+
+        async function applyCustomVideoQuality() {
+            try {
+                const customSettings = {
+                    resolution: customResolution.value,
+                    bitrate: customBitrate.value,
+                    fps: parseInt(customFps.value),
+                    crf: parseInt(customCrf.value),
+                    preset: 'medium'
+                };
+                
+                log(`Applying custom video quality: ${JSON.stringify(customSettings)}`);
+                
+                if (socket && isConnected) {
+                    socket.emit('adjust-video-quality', {
+                        classId: CONFIG.classId,
+                        qualityPreset: 'custom',
+                        customSettings: customSettings
+                    });
+                }
+                
+                updateVideoQualityStatus('custom', customSettings);
+                
+            } catch (error) {
+                log(`Failed to apply custom video quality: ${error.message}`);
+            }
+        }
+
+        async function getVideoQualityRecommendations() {
+            try {
+                log('Getting video quality recommendations...');
+                
+                // Get current network conditions
+                const latency = await testLatency();
+                const bandwidth = await testBandwidth();
+                const packetLoss = await testPacketLoss();
+                
+                const networkConditions = {
+                    latency: latency.average,
+                    bandwidth: bandwidth.download,
+                    packetLoss: packetLoss.lossRate
+                };
+                
+                if (socket && isConnected) {
+                    socket.emit('request-video-quality-recommendations', {
+                        classId: CONFIG.classId,
+                        networkConditions: networkConditions
+                    });
+                }
+                
+            } catch (error) {
+                log(`Failed to get recommendations: ${error.message}`);
+            }
+        }
+
+        async function autoAdjustVideoQuality() {
+            try {
+                log('Auto-adjusting video quality...');
+                
+                // Get current network quality
+                const latency = await testLatency();
+                const bandwidth = await testBandwidth();
+                const packetLoss = await testPacketLoss();
+                
+                const qualityScore = calculateQualityScore(latency, bandwidth, packetLoss);
+                const currentBandwidth = bandwidthSelect.value;
+                
+                // Call API to auto-adjust
+                const response = await fetch(`${CONFIG.fastApiUrl}/api/v1/streaming/video-quality/auto-adjust`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.token}`
+                    },
+                    body: JSON.stringify({
+                        network_quality_score: qualityScore,
+                        current_bandwidth: currentBandwidth
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log(`Auto-adjusted video quality: ${result.old_preset} -> ${result.new_preset}`);
+                    updateVideoQualityStatus(result.new_preset);
+                } else {
+                    log('Failed to auto-adjust video quality');
+                }
+                
+            } catch (error) {
+                log(`Failed to auto-adjust video quality: ${error.message}`);
+            }
+        }
+
+        function updateVideoQualityStatus(preset, customSettings = null) {
+            const presetNames = {
+                ultra_low: 'Ultra Low (320x240, 5fps)',
+                low: 'Low (480x360, 10fps)',
+                medium: 'Medium (640x480, 15fps)',
+                high: 'High (854x480, 24fps)',
+                very_high: 'Very High (1280x720, 30fps)',
+                ultra_high: 'Ultra High (1920x1080, 30fps)',
+                custom: customSettings ? 
+                    `Custom (${customSettings.resolution}, ${customSettings.fps}fps)` : 
+                    'Custom'
+            };
+            
+            const statusText = `Video Quality: ${presetNames[preset] || preset}`;
+            videoQualityStatus.textContent = statusText;
+            videoQualityStatus.className = 'status connected';
+            
+            // Update selector if not custom
+            if (preset !== 'custom') {
+                videoQualitySelect.value = preset;
+            }
+        }
+
+        function toggleCustomSettings() {
+            const isVisible = customQualitySettings.style.display !== 'none';
+            customQualitySettings.style.display = isVisible ? 'none' : 'block';
+            showCustomBtn.textContent = isVisible ? 'Show Custom Settings' : 'Hide Custom Settings';
+        }
+
+        function displayVideoQualityRecommendations(recommendations) {
+            log('=== Video Quality Recommendations ===');
+            
+            recommendations.recommendations.forEach((rec, index) => {
+                const status = rec.recommended ? '⭐ RECOMMENDED' : '';
+                log(`${index + 1}. ${rec.preset}: ${rec.settings.description} (Score: ${rec.suitabilityScore}/100) ${status}`);
+            });
+            
+            if (recommendations.topRecommendation) {
+                log(`Top recommendation: ${recommendations.topRecommendation.preset}`);
+            }
+            
+            log('=====================================');
+        }
+
         // Event listeners
         connectBtn.addEventListener('click', connectToClass);
         disconnectBtn.addEventListener('click', disconnectFromClass);
@@ -662,6 +899,13 @@
         });
 
         detectQualityBtn.addEventListener('click', detectNetworkQuality);
+
+        // Video quality event listeners
+        applyQualityBtn.addEventListener('click', applyVideoQuality);
+        applyCustomBtn.addEventListener('click', applyCustomVideoQuality);
+        getRecommendationsBtn.addEventListener('click', getVideoQualityRecommendations);
+        autoAdjustBtn.addEventListener('click', autoAdjustVideoQuality);
+        showCustomBtn.addEventListener('click', toggleCustomSettings);
 
         // Initialize
         updateButtons();

@@ -17,38 +17,144 @@ logger = logging.getLogger(__name__)
 class CompressionService:
     """Service for compressing files to optimize for low-bandwidth scenarios."""
     
-    # Compression quality settings for different bandwidth scenarios
+    # Enhanced compression quality settings for poor networks
     BANDWIDTH_PROFILES = {
-        "ultra_low": {  # < 64kbps
+        "ultra_low": {  # < 32kbps - Emergency mode
+            "audio_bitrate": "16k",
+            "audio_sample_rate": "16000",
+            "audio_channels": 1,  # Mono for ultra low bandwidth
+            "audio_codec": "opus",
+            "video_bitrate": "50k",
+            "video_fps": 5,
+            "video_resolution": "320x240",
+            "image_quality": 20,
+            "image_max_width": 640,
+            "image_max_height": 480,
+            "compression_level": 9,  # Maximum compression
+            "buffer_size": 1024,
+            "chunk_size": 512
+        },
+        "very_low": {  # 32-64kbps
             "audio_bitrate": "32k",
             "audio_sample_rate": "22050",
+            "audio_channels": 1,
+            "audio_codec": "opus",
+            "video_bitrate": "100k",
+            "video_fps": 10,
+            "video_resolution": "480x360",
             "image_quality": 30,
             "image_max_width": 800,
-            "image_max_height": 600
+            "image_max_height": 600,
+            "compression_level": 8,
+            "buffer_size": 2048,
+            "chunk_size": 1024
         },
         "low": {  # 64-128kbps
             "audio_bitrate": "64k",
             "audio_sample_rate": "44100",
+            "audio_channels": 2,
+            "audio_codec": "opus",
+            "video_bitrate": "200k",
+            "video_fps": 15,
+            "video_resolution": "640x480",
             "image_quality": 50,
             "image_max_width": 1024,
-            "image_max_height": 768
+            "image_max_height": 768,
+            "compression_level": 7,
+            "buffer_size": 4096,
+            "chunk_size": 2048
         },
         "medium": {  # 128-256kbps
             "audio_bitrate": "128k",
             "audio_sample_rate": "44100",
+            "audio_channels": 2,
+            "audio_codec": "opus",
+            "video_bitrate": "400k",
+            "video_fps": 24,
+            "video_resolution": "854x480",
             "image_quality": 70,
             "image_max_width": 1280,
-            "image_max_height": 720
+            "image_max_height": 720,
+            "compression_level": 6,
+            "buffer_size": 8192,
+            "chunk_size": 4096
         },
-        "high": {  # > 256kbps
+        "high": {  # 256-512kbps
             "audio_bitrate": "192k",
             "audio_sample_rate": "44100",
+            "audio_channels": 2,
+            "audio_codec": "opus",
+            "video_bitrate": "800k",
+            "video_fps": 30,
+            "video_resolution": "1280x720",
             "image_quality": 85,
             "image_max_width": 1920,
-            "image_max_height": 1080
+            "image_max_height": 1080,
+            "compression_level": 5,
+            "buffer_size": 16384,
+            "chunk_size": 8192
+        },
+        "ultra_high": {  # > 512kbps
+            "audio_bitrate": "256k",
+            "audio_sample_rate": "48000",
+            "audio_channels": 2,
+            "audio_codec": "opus",
+            "video_bitrate": "1500k",
+            "video_fps": 30,
+            "video_resolution": "1920x1080",
+            "image_quality": 95,
+            "image_max_width": 2560,
+            "image_max_height": 1440,
+            "compression_level": 4,
+            "buffer_size": 32768,
+            "chunk_size": 16384
         }
     }
     
+    @staticmethod
+    def compress_video(input_path: str, output_path: str, bandwidth_profile: str = "low") -> bool:
+        """
+        Compress video file using ffmpeg with advanced optimization for poor networks.
+        """
+        try:
+            if bandwidth_profile not in CompressionService.BANDWIDTH_PROFILES:
+                bandwidth_profile = "low"
+            
+            profile = CompressionService.BANDWIDTH_PROFILES[bandwidth_profile]
+            
+            # Advanced video compression with multiple passes for better quality
+            cmd = [
+                'ffmpeg', '-i', input_path,
+                '-c:v', 'libx264',  # H.264 codec for better compatibility
+                '-preset', 'ultrafast',  # Fast encoding for real-time
+                '-tune', 'zerolatency',  # Optimize for low latency
+                '-crf', str(28 + (9 - profile['compression_level'])),  # Quality factor
+                '-maxrate', profile['video_bitrate'],
+                '-bufsize', str(int(profile['video_bitrate'].replace('k', '')) * 2) + 'k',
+                '-vf', f"scale={profile['video_resolution']},fps={profile['video_fps']}",
+                '-c:a', 'libopus',  # Opus audio codec
+                '-b:a', profile['audio_bitrate'],
+                '-ar', str(profile['audio_sample_rate']),
+                '-ac', str(profile['audio_channels']),
+                '-movflags', '+faststart',  # Optimize for streaming
+                '-f', 'mp4',
+                '-y',  # Overwrite output file
+                output_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                logger.info(f"Video compressed successfully: {input_path} -> {output_path}")
+                return True
+            else:
+                logger.error(f"Video compression failed: {result.stderr}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error compressing video: {str(e)}")
+            return False
+
     @staticmethod
     def compress_audio(input_path: str, output_path: str, bandwidth_profile: str = "low") -> bool:
         """

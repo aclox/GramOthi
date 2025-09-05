@@ -48,6 +48,90 @@ const CONFIG = {
   ]
 };
 
+// Adaptive streaming profiles for poor networks
+const ADAPTIVE_PROFILES = {
+  emergency: {
+    audio: { bitrate: '8k', sampleRate: 16000, channels: 1, codec: 'opus' },
+    video: { bitrate: '25k', fps: 3, resolution: '240x180', codec: 'h264' },
+    network: { bufferSize: 512, chunkSize: 256, retryAttempts: 5, timeout: 30000 }
+  },
+  critical: {
+    audio: { bitrate: '16k', sampleRate: 22050, channels: 1, codec: 'opus' },
+    video: { bitrate: '50k', fps: 5, resolution: '320x240', codec: 'h264' },
+    network: { bufferSize: 1024, chunkSize: 512, retryAttempts: 3, timeout: 20000 }
+  },
+  poor: {
+    audio: { bitrate: '32k', sampleRate: 44100, channels: 1, codec: 'opus' },
+    video: { bitrate: '100k', fps: 10, resolution: '480x360', codec: 'h264' },
+    network: { bufferSize: 2048, chunkSize: 1024, retryAttempts: 2, timeout: 15000 }
+  },
+  fair: {
+    audio: { bitrate: '64k', sampleRate: 44100, channels: 2, codec: 'opus' },
+    video: { bitrate: '200k', fps: 15, resolution: '640x480', codec: 'h264' },
+    network: { bufferSize: 4096, chunkSize: 2048, retryAttempts: 2, timeout: 10000 }
+  },
+  good: {
+    audio: { bitrate: '128k', sampleRate: 44100, channels: 2, codec: 'opus' },
+    video: { bitrate: '400k', fps: 24, resolution: '854x480', codec: 'h264' },
+    network: { bufferSize: 8192, chunkSize: 4096, retryAttempts: 1, timeout: 8000 }
+  },
+  excellent: {
+    audio: { bitrate: '192k', sampleRate: 48000, channels: 2, codec: 'opus' },
+    video: { bitrate: '800k', fps: 30, resolution: '1280x720', codec: 'h264' },
+    network: { bufferSize: 16384, chunkSize: 8192, retryAttempts: 1, timeout: 5000 }
+  }
+};
+
+/**
+ * Get adaptive configuration based on network quality
+ */
+function getAdaptiveConfig(bandwidth, qualityMetrics, contentType) {
+  let profile = 'fair'; // Default profile
+  
+  // Determine profile based on bandwidth and quality metrics
+  if (qualityMetrics) {
+    const { latency, packetLoss, jitter } = qualityMetrics;
+    
+    if (latency > 1000 || packetLoss > 10) {
+      profile = 'emergency';
+    } else if (latency > 500 || packetLoss > 5) {
+      profile = 'critical';
+    } else if (latency > 200 || packetLoss > 2) {
+      profile = 'poor';
+    } else if (latency < 50 && packetLoss < 0.5 && jitter < 10) {
+      profile = 'excellent';
+    } else if (latency < 100 && packetLoss < 1) {
+      profile = 'good';
+    }
+  } else if (bandwidth) {
+    // Fallback to bandwidth-based selection
+    switch (bandwidth) {
+      case 'ultra_low': profile = 'emergency'; break;
+      case 'very_low': profile = 'critical'; break;
+      case 'low': profile = 'poor'; break;
+      case 'medium': profile = 'fair'; break;
+      case 'high': profile = 'good'; break;
+      case 'ultra_high': profile = 'excellent'; break;
+    }
+  }
+  
+  const config = ADAPTIVE_PROFILES[profile];
+  
+  return {
+    profile: profile,
+    contentType: contentType,
+    audio: config.audio,
+    video: config.video,
+    network: config.network,
+    optimization: {
+      adaptiveBitrate: true,
+      errorRecovery: true,
+      bufferingStrategy: profile.includes('emergency') || profile.includes('critical') ? 'aggressive' : 'balanced',
+      fallbackEnabled: true
+    }
+  };
+}
+
 // Add TURN servers to ICE servers if configured
 if (process.env.TURN_SERVERS) {
   CONFIG.ICE_SERVERS.push(...JSON.parse(process.env.TURN_SERVERS));
@@ -251,12 +335,13 @@ io.on('connection', async (socket) => {
     });
   });
   
-  // Handle bandwidth detection
+  // Handle bandwidth detection and network quality
   socket.on('bandwidth-report', (data) => {
-    const { classId, bandwidth, connectionType } = data;
+    const { classId, bandwidth, connectionType, qualityMetrics } = data;
     // Store bandwidth info for optimization
     socket.bandwidth = bandwidth;
     socket.connectionType = connectionType;
+    socket.qualityMetrics = qualityMetrics;
     
     // Notify teacher about student's bandwidth
     const roomUsers = classRooms.get(classId);
@@ -267,11 +352,47 @@ io.on('connection', async (socket) => {
           userSocket.emit('student-bandwidth', {
             userId: socket.userId,
             bandwidth: bandwidth,
-            connectionType: connectionType
+            connectionType: connectionType,
+            qualityMetrics: qualityMetrics
           });
         }
       });
     }
+  });
+
+  // Handle network quality adaptation
+  socket.on('quality-adaptation', (data) => {
+    const { classId, oldProfile, newProfile, reason } = data;
+    
+    // Broadcast quality adaptation to all users in the class
+    const roomUsers = classRooms.get(classId);
+    if (roomUsers) {
+      roomUsers.forEach(userId => {
+        const userSocket = userConnections.get(userId);
+        if (userSocket) {
+          userSocket.emit('quality-adaptation', {
+            userId: socket.userId,
+            oldProfile: oldProfile,
+            newProfile: newProfile,
+            reason: reason,
+            timestamp: Date.now()
+          });
+        }
+      });
+    }
+  });
+
+  // Handle adaptive streaming requests
+  socket.on('request-adaptive-config', (data) => {
+    const { classId, contentType } = data;
+    
+    // Get adaptive configuration based on user's network quality
+    const adaptiveConfig = getAdaptiveConfig(socket.bandwidth, socket.qualityMetrics, contentType);
+    
+    socket.emit('adaptive-config', {
+      config: adaptiveConfig,
+      timestamp: Date.now()
+    });
   });
   
   // Handle disconnection

@@ -12,6 +12,8 @@ import aiohttp
 from sqlalchemy.orm import Session
 from ..models import User, Class, LiveSession, Slide
 from ..database import get_db
+from .network_quality_service import network_quality_service
+from .compression_service import CompressionService
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,8 @@ class WebRTCStreamingService:
         self.signaling_server_url = "http://localhost:3001"
         self.active_streams: Dict[int, Dict] = {}  # class_id -> stream_data
         self.peer_connections: Dict[int, Dict] = {}  # user_id -> connection_data
+        self.quality_monitoring: Dict[int, Dict] = {}  # user_id -> monitoring_data
+        self.adaptive_profiles: Dict[int, str] = {}  # user_id -> current_profile
     
     async def start_live_stream(
         self, 
@@ -264,6 +268,9 @@ class WebRTCStreamingService:
                     participant["bandwidth_profile"] = bandwidth_profile
                     break
             
+            # Store adaptive profile
+            self.adaptive_profiles[user_id] = bandwidth_profile
+            
             # Notify signaling server
             await self._notify_signaling_server("bandwidth-update", {
                 "class_id": class_id,
@@ -279,6 +286,132 @@ class WebRTCStreamingService:
         except Exception as e:
             logger.error(f"Failed to update bandwidth profile: {str(e)}")
             raise
+
+    async def detect_and_optimize_network_quality(
+        self, 
+        class_id: int, 
+        user_id: int
+    ) -> Dict[str, Any]:
+        """Detect network quality and automatically optimize streaming parameters."""
+        try:
+            logger.info(f"Starting network quality detection for user {user_id}")
+            
+            # Perform comprehensive network quality detection
+            quality_result = await network_quality_service.detect_network_quality(user_id)
+            
+            # Update user's profile based on detected quality
+            recommended_profile = quality_result["recommended_profile"]
+            await self.update_bandwidth_profile(class_id, user_id, recommended_profile)
+            
+            # Start continuous monitoring
+            monitoring_task = asyncio.create_task(
+                self._monitor_user_quality(user_id, class_id)
+            )
+            self.quality_monitoring[user_id] = {
+                "task": monitoring_task,
+                "started_at": datetime.now(timezone.utc),
+                "quality_score": quality_result["quality_score"]
+            }
+            
+            return {
+                "success": True,
+                "quality_detection": quality_result,
+                "optimization_applied": True,
+                "monitoring_started": True
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to detect and optimize network quality: {str(e)}")
+            raise
+
+    async def _monitor_user_quality(self, user_id: int, class_id: int):
+        """Continuously monitor user's network quality and adapt streaming."""
+        try:
+            while user_id in self.quality_monitoring:
+                # Quick quality check
+                quality_result = await network_quality_service.monitor_connection_quality(
+                    user_id, duration=30
+                )
+                
+                # Check if profile needs adjustment
+                current_profile = self.adaptive_profiles.get(user_id, "fair")
+                new_profile = quality_result.get("final_profile", current_profile)
+                
+                if new_profile != current_profile:
+                    logger.info(f"Adapting profile for user {user_id}: {current_profile} -> {new_profile}")
+                    await self.update_bandwidth_profile(class_id, user_id, new_profile)
+                    
+                    # Notify user about quality change
+                    await self._notify_signaling_server("quality-adaptation", {
+                        "class_id": class_id,
+                        "user_id": user_id,
+                        "old_profile": current_profile,
+                        "new_profile": new_profile,
+                        "reason": "network_quality_change"
+                    })
+                
+                await asyncio.sleep(10)  # Check every 10 seconds
+                
+        except Exception as e:
+            logger.error(f"Quality monitoring failed for user {user_id}: {str(e)}")
+        finally:
+            # Clean up monitoring
+            if user_id in self.quality_monitoring:
+                del self.quality_monitoring[user_id]
+
+    async def get_optimized_streaming_config(
+        self, 
+        user_id: int, 
+        content_type: str = "audio"
+    ) -> Dict[str, Any]:
+        """Get optimized streaming configuration for a user."""
+        try:
+            profile = self.adaptive_profiles.get(user_id, "fair")
+            profile_config = network_quality_service.get_adaptive_profile_config(profile)
+            
+            # Get compression settings
+            compression_profile = CompressionService.BANDWIDTH_PROFILES.get(profile, {})
+            
+            # Combine configurations
+            streaming_config = {
+                "profile": profile,
+                "audio": {
+                    "bitrate": profile_config["audio_bitrate"],
+                    "sample_rate": compression_profile.get("audio_sample_rate", 44100),
+                    "channels": compression_profile.get("audio_channels", 2),
+                    "codec": compression_profile.get("audio_codec", "opus")
+                },
+                "video": {
+                    "bitrate": profile_config["video_bitrate"],
+                    "fps": profile_config["video_fps"],
+                    "resolution": profile_config["video_resolution"],
+                    "codec": "h264"
+                },
+                "network": {
+                    "buffer_size": profile_config["buffer_size"],
+                    "chunk_size": profile_config["chunk_size"],
+                    "retry_attempts": profile_config["retry_attempts"],
+                    "timeout": profile_config["timeout"]
+                },
+                "optimization": {
+                    "adaptive_bitrate": True,
+                    "error_recovery": True,
+                    "buffering_strategy": "aggressive" if profile in ["emergency", "critical"] else "balanced"
+                }
+            }
+            
+            return streaming_config
+            
+        except Exception as e:
+            logger.error(f"Failed to get optimized streaming config: {str(e)}")
+            # Return emergency fallback
+            return {
+                "profile": "emergency",
+                "audio": {"bitrate": "8k", "sample_rate": 16000, "channels": 1, "codec": "opus"},
+                "video": {"bitrate": "25k", "fps": 3, "resolution": "240x180", "codec": "h264"},
+                "network": {"buffer_size": 512, "chunk_size": 256, "retry_attempts": 5, "timeout": 30},
+                "optimization": {"adaptive_bitrate": True, "error_recovery": True, "buffering_strategy": "aggressive"}
+            }
     
     async def get_stream_status(self, class_id: int) -> Dict[str, Any]:
         """Get current stream status."""

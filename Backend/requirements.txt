@@ -21,3 +21,4 @@ opencv-python==4.8.1.78
 email-validator
 aiohttp
 websockets
+statistics

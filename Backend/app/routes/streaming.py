@@ -221,16 +221,67 @@ async def get_class_slides(
     
     return slides
 
+# Network Quality Detection and Adaptive Streaming
+@router.post("/detect-network-quality")
+async def detect_network_quality(
+    class_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """Detect network quality and automatically optimize streaming parameters."""
+    try:
+        result = await webrtc_service.detect_and_optimize_network_quality(
+            class_id=class_id,
+            user_id=current_user.id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to detect network quality: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to detect network quality: {str(e)}"
+        )
+
+@router.get("/streaming-config/{user_id}")
+async def get_optimized_streaming_config(
+    user_id: int,
+    content_type: str = "audio",
+    current_user: User = Depends(get_current_user)
+):
+    """Get optimized streaming configuration for a user."""
+    try:
+        # Verify user can access this config
+        if current_user.id != user_id and current_user.role != "teacher":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        
+        config = await webrtc_service.get_optimized_streaming_config(
+            user_id=user_id,
+            content_type=content_type
+        )
+        
+        return config
+        
+    except Exception as e:
+        logger.error(f"Failed to get streaming config: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get streaming config: {str(e)}"
+        )
+
 # Bandwidth Management
 @router.post("/bandwidth-profile")
 async def update_bandwidth_profile(
     class_id: int,
-    bandwidth_profile: str,  # 'ultra_low', 'low', 'medium', 'high'
+    bandwidth_profile: str,  # 'emergency', 'critical', 'poor', 'fair', 'good', 'excellent'
     current_user: User = Depends(get_current_user)
 ):
     """Update user's bandwidth profile for optimization."""
     try:
-        valid_profiles = ['ultra_low', 'low', 'medium', 'high']
+        valid_profiles = ['emergency', 'critical', 'poor', 'fair', 'good', 'excellent']
         if bandwidth_profile not in valid_profiles:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

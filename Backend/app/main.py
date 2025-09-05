@@ -56,6 +56,10 @@ app.include_router(notifications.router, prefix="/api/v1")
 from .routes import sync
 app.include_router(sync.router, prefix="/api/v1")
 
+# Import and include streaming router
+from .routes import streaming
+app.include_router(streaming.router, prefix="/api/v1")
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():

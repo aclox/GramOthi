@@ -1,0 +1,29 @@
+{
+  "name": "gramothi-signaling-server",
+  "version": "1.0.0",
+  "description": "WebRTC signaling server for GramOthi live streaming",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.0",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "live-streaming",
+    "education"
+  ],
+  "author": "GramOthi Team",
+  "license": "MIT"
+}

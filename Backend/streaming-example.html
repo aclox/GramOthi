@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GramOthi WebRTC Streaming Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.disconnected { background: #f8d7da; color: #721c24; }
+        .status.connecting { background: #fff3cd; color: #856404; }
+        .slide-container {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+        .slide-content {
+            font-size: 18px;
+            color: #666;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bandwidth-selector {
+            margin: 10px 0;
+        }
+        select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎥 GramOthi WebRTC Streaming Demo</h1>
+    
+    <div class="container">
+        <h2>Connection Status</h2>
+        <div id="status" class="status disconnected">Disconnected</div>
+        <div class="controls">
+            <button id="connectBtn" class="btn-primary">Connect to Class</button>
+            <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
+        </div>
+        <div class="bandwidth-selector">
+            <label for="bandwidth">Bandwidth Profile:</label>
+            <select id="bandwidth">
+                <option value="ultra_low">Ultra Low (< 64kbps)</option>
+                <option value="low">Low (64-128kbps)</option>
+                <option value="medium" selected>Medium (128-256kbps)</option>
+                <option value="high">High (> 256kbps)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Audio Controls</h2>
+        <div class="audio-controls">
+            <button id="startAudioBtn" class="btn-success" disabled>Start Audio</button>
+            <button id="stopAudioBtn" class="btn-danger" disabled>Stop Audio</button>
+            <button id="muteBtn" class="btn-warning" disabled>Mute</button>
+            <span id="audioStatus">Audio: Stopped</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Slide Synchronization</h2>
+        <div class="controls">
+            <button id="prevSlideBtn" class="btn-primary" disabled>Previous Slide</button>
+            <button id="nextSlideBtn" class="btn-primary" disabled>Next Slide</button>
+            <button id="gotoSlideBtn" class="btn-primary" disabled>Go to Slide</button>
+        </div>
+        <div class="slide-container">
+            <div class="slide-content" id="slideContent">
+                No slide loaded. Connect to a class to start.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Event Log</h2>
+        <div id="log" class="log"></div>
+        <button id="clearLogBtn" class="btn-warning">Clear Log</button>
+    </div>
+
+    <!-- Include Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            signalingServerUrl: 'http://localhost:3001',
+            fastApiUrl: 'http://localhost:8000',
+            classId: 1, // Demo class ID
+            token: 'demo-token' // In real app, this would be a JWT token
+        };
+
+        // Global variables
+        let socket = null;
+        let peerConnection = null;
+        let localStream = null;
+        let currentSlide = 0;
+        let isConnected = false;
+        let isAudioEnabled = false;
+
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const startAudioBtn = document.getElementById('startAudioBtn');
+        const stopAudioBtn = document.getElementById('stopAudioBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const audioStatusEl = document.getElementById('audioStatus');
+        const prevSlideBtn = document.getElementById('prevSlideBtn');
+        const nextSlideBtn = document.getElementById('nextSlideBtn');
+        const gotoSlideBtn = document.getElementById('gotoSlideBtn');
+        const slideContentEl = document.getElementById('slideContent');
+        const logEl = document.getElementById('log');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const bandwidthSelect = document.getElementById('bandwidth');
+
+        // Utility functions
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateStatus(status, className) {
+            statusEl.textContent = status;
+            statusEl.className = `status ${className}`;
+        }
+
+        function updateButtons() {
+            connectBtn.disabled = isConnected;
+            disconnectBtn.disabled = !isConnected;
+            startAudioBtn.disabled = !isConnected || isAudioEnabled;
+            stopAudioBtn.disabled = !isConnected || !isAudioEnabled;
+            muteBtn.disabled = !isConnected || !isAudioEnabled;
+            prevSlideBtn.disabled = !isConnected;
+            nextSlideBtn.disabled = !isConnected;
+            gotoSlideBtn.disabled = !isConnected;
+        }
+
+        // WebRTC functions
+        async function createPeerConnection() {
+            const configuration = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            };
+
+            peerConnection = new RTCPeerConnection(configuration);
+
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('webrtc-signal', {
+                        targetUserId: 'teacher', // In real app, this would be the teacher's ID
+                        signal: event.candidate,
+                        type: 'ice-candidate'
+                    });
+                }
+            };
+
+            // Handle remote stream
+            peerConnection.ontrack = (event) => {
+                log('Received remote audio stream');
+                const audio = document.createElement('audio');
+                audio.srcObject = event.streams[0];
+                audio.autoplay = true;
+                document.body.appendChild(audio);
+            };
+
+            return peerConnection;
+        }
+
+        async function startAudio() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Add audio track to peer connection
+                localStream.getAudioTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                isAudioEnabled = true;
+                audioStatusEl.textContent = 'Audio: Enabled';
+                log('Audio stream started');
+                updateButtons();
+            } catch (error) {
+                log(`Error starting audio: ${error.message}`);
+            }
+        }
+
+        function stopAudio() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            isAudioEnabled = false;
+            audioStatusEl.textContent = 'Audio: Stopped';
+            log('Audio stream stopped');
+            updateButtons();
+        }
+
+        // Socket.IO functions
+        function connectToClass() {
+            updateStatus('Connecting...', 'connecting');
+            log('Connecting to signaling server...');
+
+            socket = io(CONFIG.signalingServerUrl);
+
+            socket.on('connect', () => {
+                log('Connected to signaling server');
+                socket.emit('authenticate', {
+                    token: CONFIG.token,
+                    classId: CONFIG.classId
+                });
+            });
+
+            socket.on('authenticated', (data) => {
+                log(`Authenticated as ${data.userName} (${data.userRole})`);
+                isConnected = true;
+                updateStatus('Connected', 'connected');
+                updateButtons();
+                
+                // Create peer connection
+                createPeerConnection();
+                
+                // Report bandwidth
+                const bandwidth = bandwidthSelect.value;
+                socket.emit('bandwidth-report', {
+                    classId: CONFIG.classId,
+                    bandwidth: bandwidth,
+                    connectionType: 'wifi'
+                });
+            });
+
+            socket.on('auth-error', (error) => {
+                log(`Authentication error: ${error.message}`);
+                updateStatus('Authentication Failed', 'disconnected');
+            });
+
+            socket.on('slide-sync', (data) => {
+                log(`Slide sync: ${data.event} - ${JSON.stringify(data.slideData)}`);
+                updateSlideDisplay(data.slideData);
+            });
+
+            socket.on('audio-control', (data) => {
+                log(`Audio control: ${data.action}`);
+                handleAudioControl(data);
+            });
+
+            socket.on('user-joined', (data) => {
+                log(`User joined: ${data.userName} (${data.userRole})`);
+            });
+
+            socket.on('user-left', (data) => {
+                log(`User left: ${data.userId}`);
+            });
+
+            socket.on('webrtc-signal', (data) => {
+                handleWebRTCSignal(data);
+            });
+
+            socket.on('disconnect', () => {
+                log('Disconnected from signaling server');
+                isConnected = false;
+                updateStatus('Disconnected', 'disconnected');
+                updateButtons();
+            });
+        }
+
+        function disconnectFromClass() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            stopAudio();
+            isConnected = false;
+            updateStatus('Disconnected', 'disconnected');
+            updateButtons();
+            log('Disconnected from class');
+        }
+
+        async function handleWebRTCSignal(data) {
+            try {
+                if (data.type === 'offer') {
+                    await peerConnection.setRemoteDescription(data.signal);
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    socket.emit('webrtc-signal', {
+                        targetUserId: data.fromUserId,
+                        signal: answer,
+                        type: 'answer'
+                    });
+                } else if (data.type === 'answer') {
+                    await peerConnection.setRemoteDescription(data.signal);
+                } else if (data.type === 'ice-candidate') {
+                    await peerConnection.addIceCandidate(data.signal);
+                }
+            } catch (error) {
+                log(`WebRTC signal error: ${error.message}`);
+            }
+        }
+
+        function handleAudioControl(data) {
+            switch (data.action) {
+                case 'start':
+                    if (!isAudioEnabled) startAudio();
+                    break;
+                case 'stop':
+                    if (isAudioEnabled) stopAudio();
+                    break;
+                case 'mute':
+                    if (localStream) {
+                        localStream.getAudioTracks().forEach(track => {
+                            track.enabled = false;
+                        });
+                    }
+                    break;
+                case 'unmute':
+                    if (localStream) {
+                        localStream.getAudioTracks().forEach(track => {
+                            track.enabled = true;
+                        });
+                    }
+                    break;
+            }
+        }
+
+        function updateSlideDisplay(slideData) {
+            if (slideData) {
+                slideContentEl.innerHTML = `
+                    <div>
+                        <h3>Slide ${slideData.order_no || currentSlide}</h3>
+                        <p>File: ${slideData.file_url || 'Unknown'}</p>
+                        <p>Content would be displayed here</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event listeners
+        connectBtn.addEventListener('click', connectToClass);
+        disconnectBtn.addEventListener('click', disconnectFromClass);
+        startAudioBtn.addEventListener('click', startAudio);
+        stopAudioBtn.addEventListener('click', stopAudio);
+        muteBtn.addEventListener('click', () => {
+            if (localStream) {
+                const isMuted = !localStream.getAudioTracks()[0].enabled;
+                localStream.getAudioTracks().forEach(track => {
+                    track.enabled = isMuted;
+                });
+                muteBtn.textContent = isMuted ? 'Mute' : 'Unmute';
+            }
+        });
+
+        prevSlideBtn.addEventListener('click', () => {
+            if (socket && isConnected) {
+                socket.emit('slide-sync', {
+                    classId: CONFIG.classId,
+                    slideEvent: 'previous',
+                    slideData: { slideId: currentSlide - 1 }
+                });
+                currentSlide = Math.max(0, currentSlide - 1);
+            }
+        });
+
+        nextSlideBtn.addEventListener('click', () => {
+            if (socket && isConnected) {
+                socket.emit('slide-sync', {
+                    classId: CONFIG.classId,
+                    slideEvent: 'next',
+                    slideData: { slideId: currentSlide + 1 }
+                });
+                currentSlide++;
+            }
+        });
+
+        gotoSlideBtn.addEventListener('click', () => {
+            const slideNumber = prompt('Enter slide number:');
+            if (slideNumber && !isNaN(slideNumber)) {
+                if (socket && isConnected) {
+                    socket.emit('slide-sync', {
+                        classId: CONFIG.classId,
+                        slideEvent: 'goto',
+                        slideData: { slideId: parseInt(slideNumber) }
+                    });
+                    currentSlide = parseInt(slideNumber);
+                }
+            }
+        });
+
+        clearLogBtn.addEventListener('click', () => {
+            logEl.innerHTML = '';
+        });
+
+        bandwidthSelect.addEventListener('change', () => {
+            if (socket && isConnected) {
+                const bandwidth = bandwidthSelect.value;
+                socket.emit('bandwidth-report', {
+                    classId: CONFIG.classId,
+                    bandwidth: bandwidth,
+                    connectionType: 'wifi'
+                });
+                log(`Bandwidth profile updated to: ${bandwidth}`);
+            }
+        });
+
+        // Initialize
+        updateButtons();
+        log('GramOthi WebRTC Streaming Demo loaded');
+        log('Click "Connect to Class" to start');
+    </script>
+</body>
+</html>

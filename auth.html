@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login • Student Dashboard</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <meta name="theme-color" content="#0d47a1">
+</head>
+<body>
+    <section class="hero" style="padding-bottom:0">
+        <div class="hero-inner">
+            <h2 class="hero-title">Welcome</h2>
+            <p class="hero-sub">Sign in to continue</p>
+        </div>
+    </section>
+    <main class="content" style="max-width:680px">
+        <div class="card" style="padding:18px">
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+                <button id="roleStudent" class="btn">Student</button>
+                <button id="roleTeacher" class="btn-outline">Teacher</button>
+            </div>
+            <form id="authForm" class="card">
+                <label>Email
+                    <input id="email" type="email" required placeholder="you@example.com" />
+                </label>
+                <label>Password
+                    <input id="password" type="password" required placeholder="••••••••" />
+                </label>
+                <button type="submit" class="btn">Sign in</button>
+                <p class="muted" style="margin-top:8px">No account? Click once more to create one.</p>
+            </form>
+        </div>
+    </main>
+    <script src="src/auth.js"></script>
+</body>
+</html>
+
+
+

@@ -1,60 +1,56 @@
-# GramOthi
+# Student Dashboard - GramOthi Integration
 
-A comprehensive educational platform with live streaming, progress tracking, and interactive learning features.
+A modern student dashboard integrated with the [GramOthi eLearning platform](https://github.com/aclox/GramOthi) backend.
 
-## 🚀 Project Overview
+## 🚀 Features
 
-GramOthi is a full-stack educational application that provides:
-- **Live Streaming**: Real-time video streaming for educational content
-- **Progress Tracking**: Comprehensive student progress monitoring
-- **Quiz System**: Interactive assessments and evaluations
-- **Media Management**: Efficient handling of educational content
-- **Notification System**: Real-time updates and alerts
-- **Data Synchronization**: Seamless data sync across devices
+- **Authentication**: Integrated with GramOthi FastAPI backend
+- **Role-based Access**: Student and Teacher dashboards
+- **Real-time Data**: Live classes, quizzes, and progress tracking
+- **Offline Support**: PWA with service worker caching
+- **Responsive Design**: Clean blue and white theme
 
 ## 🏗️ Architecture
 
-The project follows a modern microservices architecture with:
-- **Backend**: FastAPI-based Python backend with PostgreSQL database
-- **Database**: PostgreSQL with Alembic migrations
-- **Authentication**: JWT-based authentication system
-- **File Handling**: Efficient media compression and storage
+### Frontend (This Project)
+- **HTML/CSS/JavaScript**: Vanilla JS with modern ES6+
+- **PWA**: Service worker for offline functionality
+- **IndexedDB**: Local data storage
+- **API Integration**: RESTful communication with GramOthi backend
+
+### Backend Integration
+- **GramOthi Backend**: FastAPI-based Python backend
+- **Authentication**: JWT token-based auth
+- **Database**: PostgreSQL with user management
 - **Real-time**: WebSocket support for live features
 
 ## 📁 Project Structure
 
 ```
-Backend/
-├── app/
-│   ├── routes/           # API endpoints
-│   ├── services/         # Business logic
-│   ├── models.py         # Database models
-│   ├── schemas.py        # Pydantic schemas
-│   └── main.py          # FastAPI application
-├── alembic/              # Database migrations
-├── tests/                # Test suite
-└── requirements.txt      # Python dependencies
+student dashboard/
+├── index.html              # Main dashboard
+├── auth.html               # Login/signup page
+├── src/
+│   ├── api.js             # GramOthi API integration
+│   ├── auth.js            # Authentication logic
+│   ├── app.js             # Main application logic
+│   ├── idb.js             # IndexedDB wrapper
+│   └── styles.css         # Styling
+├── sw.js                  # Service worker
+├── manifest.webmanifest   # PWA manifest
+└── icons/                 # PWA icons
 ```
 
-## 🛠️ Prerequisites
+## 🛠️ Setup
 
-- Python 3.8+
-- PostgreSQL 12+
-- Docker (optional)
-- Git
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
+### 1. Clone GramOthi Backend
 ```bash
 git clone https://github.com/aclox/GramOthi.git
-cd GramOthi
+cd GramOthi/Backend
 ```
 
-### 2. Backend Setup
+### 2. Setup GramOthi Backend
 ```bash
-cd Backend
-
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -62,37 +58,35 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp env.example .env
-# Edit .env with your database credentials
-```
-
-### 3. Database Setup
-```bash
-# Start PostgreSQL (using Docker)
-docker-compose up -d postgres
-
-# Or use your local PostgreSQL instance
-# Update .env with your database connection details
-
-# Run migrations
+# Setup database
 alembic upgrade head
-```
 
-### 4. Start the Application
-```bash
-# Start the backend server
+# Start backend server
 python -m uvicorn app.main:app --reload
-
-# The API will be available at http://localhost:8000
-# API documentation at http://localhost:8000/docs
 ```
+
+### 3. Setup Student Dashboard
+```bash
+# Serve the dashboard (requires local server for PWA)
+python -m http.server 5500
+# Or use any other local server
+```
+
+### 4. Access the Application
+- **Dashboard**: http://localhost:5500
+- **GramOthi API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
 
 ## 🔧 Configuration
 
-### Environment Variables
-Create a `.env` file in the Backend directory:
+### API Configuration
+Update the API base URL in `src/api.js`:
+```javascript
+const API_BASE_URL = 'http://localhost:8000'; // GramOthi backend URL
+```
 
+### Environment Variables (GramOthi Backend)
+Create `.env` file in GramOthi Backend directory:
 ```env
 DATABASE_URL=postgresql://username:password@localhost:5432/gramothi
 SECRET_KEY=your-secret-key-here
@@ -100,140 +94,89 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-### Database Configuration
-- **Host**: localhost (or your database host)
-- **Port**: 5432 (default PostgreSQL port)
-- **Database**: gramothi
-- **Username/Password**: Your PostgreSQL credentials
+## 📚 API Integration
 
-## 📚 API Documentation
+### Authentication Flow
+1. User selects role (Student/Teacher)
+2. Login attempts GramOthi backend first
+3. Falls back to local storage if backend unavailable
+4. JWT token stored for authenticated requests
 
-Once the server is running, you can access:
-- **Interactive API Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
+### Data Synchronization
+- **Classes**: Real-time class joining/leaving
+- **Profile**: User profile updates
+- **Quizzes**: Quiz completion tracking
+- **Progress**: Learning progress monitoring
 
-## 🧪 Testing
+### Offline Support
+- Service worker caches essential resources
+- IndexedDB stores data locally
+- Syncs with backend when connection restored
 
-```bash
-cd Backend
+## 🎯 Key Features
 
-# Run all tests
-python -m pytest
+### Student Dashboard
+- **Profile Management**: Personal information and photo upload
+- **Class Management**: Join/leave classes with real-time updates
+- **Quiz System**: Interactive quizzes with progress tracking
+- **Video Lectures**: Stream educational content
+- **Progress Tracking**: Monitor learning achievements
 
-# Run specific test files
-python -m pytest tests/test_auth.py
+### Teacher Dashboard
+- **Class Creation**: Create and manage classes
+- **Quiz Management**: Create and monitor quizzes
+- **Student Analytics**: Track student progress
+- **Content Upload**: Manage educational materials
 
-# Run with coverage
-python -m pytest --cov=app tests/
-```
+## 🔍 API Endpoints Used
 
-## 🚀 Development Workflow
+### Authentication
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+- `GET /auth/me` - Get current user
 
-### 1. Create a Feature Branch
-```bash
-git checkout -b feature/your-feature-name
-```
+### Classes
+- `GET /classes` - Get user's classes
+- `POST /classes/join` - Join a class
+- `DELETE /classes/{id}/leave` - Leave a class
 
-### 2. Make Changes
-- Follow the existing code structure
-- Add tests for new functionality
-- Update documentation as needed
+### Profile
+- `GET /users/profile` - Get user profile
+- `PUT /users/profile` - Update user profile
 
-### 3. Commit Your Changes
-```bash
-git add .
-git commit -m "feat: add your feature description"
-```
+### Quizzes
+- `GET /quizzes` - Get available quizzes
+- `POST /quizzes/{id}/submit` - Submit quiz answers
 
-### 4. Push and Create Pull Request
-```bash
-git push origin feature/your-feature-name
-# Create PR on GitHub
-```
+## 🚀 Deployment
 
-## 📝 Code Style
+### Backend Deployment
+Follow GramOthi's deployment instructions for the FastAPI backend.
 
-- **Python**: Follow PEP 8 guidelines
-- **API**: RESTful design principles
-- **Database**: Use Alembic for schema changes
-- **Testing**: Maintain good test coverage
-- **Documentation**: Keep README and code comments updated
-
-## 🔍 Key Features
-
-### Authentication System
-- JWT-based authentication
-- User registration and login
-- Role-based access control
-
-### Live Streaming
-- Real-time video streaming
-- WebSocket support
-- Session management
-
-### Progress Tracking
-- Student progress monitoring
-- Achievement tracking
-- Performance analytics
-
-### Media Management
-- File upload and storage
-- Compression optimization
-- Content delivery
+### Frontend Deployment
+1. Update API_BASE_URL to production backend URL
+2. Deploy to any static hosting service (Netlify, Vercel, etc.)
+3. Ensure HTTPS for PWA functionality
 
 ## 🤝 Contributing
 
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Test** thoroughly
-5. **Submit** a pull request
-
-### Contribution Guidelines
-- Follow the existing code style
-- Add tests for new features
-- Update documentation
-- Use meaningful commit messages
-- Keep PRs focused and small
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Database Connection Error**
-- Verify PostgreSQL is running
-- Check database credentials in `.env`
-- Ensure database exists
-
-**Migration Errors**
-- Check Alembic version compatibility
-- Verify database schema matches models
-- Run `alembic current` to check status
-
-**Import Errors**
-- Activate virtual environment
-- Install missing dependencies
-- Check Python path
-
-## 📞 Support
-
-- **Issues**: Create an issue on GitHub
-- **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: Check the `/docs` folder for detailed guides
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test with GramOthi backend
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project integrates with GramOthi and follows the same MIT License.
 
 ## 🙏 Acknowledgments
 
-- FastAPI community for the excellent web framework
-- PostgreSQL team for the robust database
-- All contributors who help improve this project
+- [GramOthi](https://github.com/aclox/GramOthi) - The comprehensive eLearning platform
+- FastAPI community for the excellent backend framework
+- All contributors who help improve this integration
 
 ---
 
-**Happy Coding! 🎉**
+**Happy Learning! 🎓**
 
-For more detailed information, check the individual documentation files in the project.

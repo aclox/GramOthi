@@ -1,601 +1,214 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educator Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Dashboard</title>
+    <meta name="theme-color" content="#0d47a1">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <!-- Mobile topbar -->
-    <div class="topbar">
-        <button class="hamburger" id="hamburger" aria-label="Open navigation"><span></span></button>
-        <div class="brand" style="background: transparent; box-shadow: none; padding: 8px 10px; margin: 0;">
-            <div class="brand-logo">ED</div>
-            <div class="brand-title">Educator Dashboard</div>
+    <header class="app-header">
+        <h1>Student Dashboard</h1>
+        <div class="header-right">
+            <div id="liveClock" class="chip"></div>
+            <button id="installBtn" class="btn btn-outline" hidden>Install App</button>
+            <div class="avatar header-avatar" title="Profile">⌁</div>
         </div>
-        <button class="btn btn-ghost" id="themeQuickToggle" aria-label="Toggle theme">Theme</button>
-    </div>
+    </header>
+    <section class="hero">
+        <div class="hero-inner">
+            <h2 class="hero-title">Learn anywhere, even on 2G</h2>
+            <p class="hero-sub">Audio-first classes, lightweight slides, offline quizzes.</p>
+        </div>
+        <svg class="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,64L80,53.3C160,43,320,21,480,37.3C640,53,800,107,960,117.3C1120,128,1280,96,1360,80L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" fill="url(#g)" opacity="0.7"></path>
+            <defs>
+                <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="#1565c0"/>
+                    <stop offset="100%" stop-color="#2196f3"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </section>
 
-    <div class="app">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="brand">
-                <div class="brand-logo">ED</div>
-                <div class="brand-title">Educator Dashboard</div>
+    <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+        <button class="tab" data-tab="classes"><span class="icon">🏫</span><span>Classes</span></button>
+        <button class="tab" data-tab="slides"><span class="icon">🖼️</span><span>Slides</span></button>
+        <button class="tab" data-tab="video"><span class="icon">🎥</span><span>Videos</span></button>
+        <button class="tab" data-tab="quizzes"><span class="icon">📝</span><span>Quizzes</span></button>
+        <button class="tab" data-tab="downloads"><span class="icon">⬇️</span><span>Downloads</span></button>
+    </nav>
+
+    <main class="content">
+        <section id="tab-dashboard" class="panel active" aria-labelledby="Dashboard">
+            <div class="dashboard">
+                <aside class="sidebar card" id="sidebar">
+                    <div class="brand">ProServe <button id="sideClose" class="chip" style="float:right">✖</button></div>
+                    <nav class="side-nav">
+                        <button class="side-item active" data-panel="tasks">Tasks</button>
+                        <button class="side-item" data-panel="files">Files</button>
+                        <button class="side-item" data-panel="analytics">Analytics</button>
+                        <button class="side-item" data-panel="integrations">Integrations</button>
+                        <button class="side-item" data-panel="notifications">Notifications</button>
+                        <button class="side-item" data-panel="settings">Settings</button>
+                    </nav>
+                </aside>
+                <section class="main">
+                    <div class="topbar card">
+                        <button id="sideOpen" class="btn-outline" style="margin-right:8px">☰</button>
+                        <input type="search" class="search" id="globalSearch" placeholder="Search" />
+                        <button id="searchBtn" class="btn" title="Search" style="margin-left:8px">🔍</button>
+                    </div>
+                    <div class="welcome card">
+                        <div>
+                            <h3>Welcome Back!</h3>
+                            <p class="muted">Check your tasks and schedule</p>
+                            <div class="actions">
+                                <button class="btn">new task +</button>
+                                <button class="btn-outline">Discover</button>
+                            </div>
+                        </div>
+                        <div class="cube">⬛</div>
+                    </div>
+                    <div class="card side-widgets" id="contextPanel">
+                            <div class="calendar small">
+                                <div class="title" id="calTitle">Month YYYY</div>
+                                <div class="cal-grid" id="calGrid"></div>
+                            </div>
+                            <div class="upcoming">
+                                <div class="title">Upcoming Tasks</div>
+                                <ul id="upcomingList" class="list"></ul>
+                            </div>
+                    </div>
+                </section>
             </div>
-            <nav class="nav" id="nav">
-                <button data-target="profile" class="active"><span class="dot"></span>Profile</button>
-                <button data-target="dashboard"><span class="dot"></span>Dashboard</button>
-                <button data-target="students"><span class="dot"></span>Students</button>
-                <button data-target="quizzes"><span class="dot"></span>Quizzes</button>
-                <button data-target="upload"><span class="dot"></span>Upload Material</button>
-                <button data-target="notes"><span class="dot"></span>Notes</button>
-                <button data-target="lecture"><span class="dot"></span>Start Lecture</button>
-                <button data-target="recordings"><span class="dot"></span>Recordings</button>
-                <button data-target="settings"><span class="dot"></span>Settings</button>
-            </nav>
-        </aside>
+        </section>
+        <section id="tab-classes" class="panel active" aria-labelledby="Classes">
+            <h2>Join Classes</h2>
+            <form id="joinClassForm" class="card">
+                <label>
+                    Class Code
+                    <input id="classCode" type="text" required placeholder="e.g., CS101" />
+                </label>
+                <button type="submit" class="btn">Join</button>
+            </form>
+            <ul id="classList" class="list"></ul>
+        </section>
 
-        <!-- Main content -->
-        <main class="main">
-            <header class="header">
-                <div class="title">Welcome, Teacher</div>
-                <div class="actions">
-                    <span class="chip" id="liveStatusChip">Live: Offline</span>
-                    <button class="btn" id="recordQuickToggle">Recording: Off</button>
-                    <button class="btn btn-primary" data-target="upload">Upload</button>
+        <section id="tab-slides" class="panel" aria-labelledby="Slides">
+            <h2>Slides</h2>
+            <div id="slidesContainer" class="grid"></div>
+        </section>
+
+        <section id="tab-video" class="panel" aria-labelledby="Videos">
+            <h2>Recorded Lectures</h2>
+            <ul id="videoList" class="list"></ul>
+            <video id="videoPlayer" controls preload="none" playsinline style="width:100%;max-height:420px;border-radius:10px"></video>
+            <div class="progress-wrap"><div id="videoProgress" class="progress"></div></div>
+        </section>
+
+        <section id="tab-quizzes" class="panel" aria-labelledby="Quizzes">
+            <h2>Quizzes</h2>
+            <div id="quizContainer" class="card"></div>
+        </section>
+
+        <section id="tab-downloads" class="panel" aria-labelledby="Downloads">
+            <h2>Offline Downloads</h2>
+            <button id="prefetchBtn" class="btn">Download Example Bundle</button>
+            <ul id="downloadList" class="list"></ul>
+        </section>
+    </main>
+
+    <footer class="app-footer">Made for low-bandwidth learning • PWA</footer>
+
+    <button id="fab" class="fab" title="Quick Download">⬇️</button>
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <dialog id="profileModal" class="profile-modal">
+        <div class="profile-page">
+            <div class="profile-header">
+                <h2>Welcome, Student</h2>
+                <div class="profile-actions">
+                    <div class="status-chip">Status: Active</div>
+                    <div class="status-chip">Grade: A+</div>
+                    <button class="btn-outline" id="uploadBtn">Upload</button>
                 </div>
-            </header>
-
-            <!-- Teacher Profile -->
-            <section class="section active" id="profile">
-                <div class="profile-card" id="profileCard">
-                    <button class="profile-edit-btn" id="editProfileBtn">Edit Profile</button>
-                    
-                    <!-- Profile Display -->
-                    <div id="profileDisplay">
-                        <div class="profile-avatar" id="profileAvatar">JS</div>
-                        <div class="profile-info">
-                            <h3 id="profileName">Dr. Sarah Johnson</h3>
-                            <div class="designation" id="profileDesignation">Senior Mathematics Professor</div>
-                            <div class="meta">
-                                <span>📅 Joined: <span id="profileJoinDate">Jan 2020</span></span>
-                                <span>📚 Subjects: <span id="profileSubjects">Math, Statistics</span></span>
-                                <span>🎓 <span id="profileQualification">PhD Mathematics</span></span>
-                            </div>
+            </div>
+            
+            <div class="profile-main">
+                <div class="profile-form">
+                    <div class="form-grid">
+                        <div class="form-column">
+                            <label>Full Name
+                                <input id="profileName" type="text" placeholder="Enter full name">
+                            </label>
+                            <label>Student ID
+                                <input id="profileStudentId" type="text" placeholder="e.g., STU2025001">
+                            </label>
+                            <label>Class & Section
+                                <input id="profileClassSection" type="text" placeholder="e.g., 10th A">
+                            </label>
                         </div>
-                    </div>
-                    
-                    <!-- Profile Edit Form -->
-                    <div id="profileEditForm" class="profile-form" style="display: none;">
-                        <div class="form-row">
-                            <div class="field">
-                                <label>Full Name</label>
-                                <input class="input" type="text" id="editName" value="Dr. Sarah Johnson">
-                            </div>
-                            <div class="field">
-                                <label>Designation</label>
-                                <input class="input" type="text" id="editDesignation" value="Senior Mathematics Professor">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="field">
-                                <label>Join Date</label>
-                                <input class="input" type="text" id="editJoinDate" value="Jan 2020">
-                            </div>
-                            <div class="field">
-                                <label>Qualification</label>
-                                <input class="input" type="text" id="editQualification" value="PhD Mathematics">
-                            </div>
-                        </div>
-                        <div class="field form-full">
-                            <label>Subjects</label>
-                            <input class="input" type="text" id="editSubjects" value="Math, Statistics" placeholder="Separate subjects with commas">
-                        </div>
-                        <div class="profile-actions">
-                            <button class="btn" id="cancelEditBtn">Cancel</button>
-                            <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="spacer"></div>
-                
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="card-header">Teaching Statistics</div>
-                        <div class="card-body">
-                            <div class="stat">
-                                <div class="stat-icon">👥</div>
-                                <div>
-                                    <div class="num" id="statStudents">24</div>
-                                    <div class="label">Active Students</div>
+                        <div class="form-column">
+                            <label>Date of Birth
+                                <input id="profileDob" type="date">
+                            </label>
+                            <label>Phone Number
+                                <input id="profilePhone" type="tel" placeholder="e.g., +91 98765 43210">
+                            </label>
+                            <label>Profile Photo
+                                <div class="photo-upload">
+                                    <img id="pfpPreview" src="" alt="profile" class="profile-photo">
+                                    <label class="btn-outline upload-label">
+                                        Upload Photo
+                                        <input id="pfpInput" type="file" accept="image/*" style="display:none">
+                                    </label>
                                 </div>
-                            </div>
+                            </label>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header">This Semester</div>
-                        <div class="card-body">
-                            <div class="stat">
-                                <div class="stat-icon">📊</div>
-                                <div>
-                                    <div class="num" id="statQuizzes">8</div>
-                                    <div class="label">Quizzes Created</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Dashboard -->
-            <section class="section" id="dashboard">
-                <div class="grid grid-3">
-                    <div class="card">
-                        <div class="card-body stat">
-                            <div class="stat-icon">📚</div>
-                            <div>
-                                <div class="num" id="statClasses">3</div>
-                                <div class="label">Total Classes</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body stat">
-                            <div class="stat-icon">🗂️</div>
-                            <div>
-                                <div class="num" id="statFiles">0</div>
-                                <div class="label">Uploaded Files</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body stat">
-                            <div class="stat-icon">🎥</div>
-                            <div>
-                                <div class="num" id="statRecordings">0</div>
-                                <div class="label">Recorded Sessions</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="spacer"></div>
-
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="card-header">Recent Uploads</div>
-                        <div class="card-body">
-                            <div id="recentUploads" class="list muted">No files uploaded yet.</div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">Recent Recordings</div>
-                        <div class="card-body">
-                            <div id="recentRecordings" class="list muted">No recordings yet.</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Students Progress -->
-            <section class="section" id="students">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row" style="justify-content: space-between; align-items: center;">
-                            <h3>Student Management</h3>
-                            <button class="btn btn-primary" id="addStudentBtn">+ Add Student</button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Search and Filter -->
-                        <div class="row" style="margin-bottom: 20px;">
-                            <div class="search-box">
-                                <input type="text" id="studentSearch" placeholder="Search students..." class="input">
-                                <span class="search-icon">🔍</span>
-                            </div>
-                            <select id="gradeFilter" class="select">
-                                <option value="">All Grades</option>
-                                <option value="A+">A+</option>
-                                <option value="A">A</option>
-                                <option value="B+">B+</option>
-                                <option value="B">B</option>
-                                <option value="C+">C+</option>
-                                <option value="C">C</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Students List -->
-                        <div class="list" id="studentsList">
-                            <!-- Students will be dynamically loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Add Student Modal -->
-            <div id="addStudentModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Add New Student</h3>
-                        <button class="modal-close" id="closeAddStudentModal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addStudentForm" class="student-form">
-                            <div class="form-row">
-                                <div class="field">
-                                    <label>First Name *</label>
-                                    <input type="text" id="studentFirstName" class="input" required>
-                                </div>
-                                <div class="field">
-                                    <label>Last Name *</label>
-                                    <input type="text" id="studentLastName" class="input" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="field">
-                                    <label>Email *</label>
-                                    <input type="email" id="studentEmail" class="input" required>
-                                </div>
-                                <div class="field">
-                                    <label>Phone</label>
-                                    <input type="tel" id="studentPhone" class="input">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="field">
-                                    <label>Student ID *</label>
-                                    <input type="text" id="studentId" class="input" required>
-                                </div>
-                                <div class="field">
-                                    <label>Grade Level</label>
-                                    <select id="studentGrade" class="select">
-                                        <option value="A+">A+</option>
-                                        <option value="A">A</option>
-                                        <option value="B+">B+</option>
-                                        <option value="B">B</option>
-                                        <option value="C+">C+</option>
-                                        <option value="C">C</option>
-                                        <option value="D">D</option>
-                                        <option value="F">F</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>Subjects</label>
-                                <input type="text" id="studentSubjects" class="input" placeholder="Math, Science, English (comma separated)">
-                            </div>
-                            <div class="field">
-                                <label>Notes</label>
-                                <textarea id="studentNotes" class="textarea" placeholder="Additional notes about the student..."></textarea>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn" id="cancelAddStudent">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add Student</button>
-                            </div>
-                        </form>
+                    <div class="form-actions">
+                        <button class="btn-outline" value="cancel">Cancel</button>
+                        <button id="saveProfile" class="btn">Save Changes</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Student Details Modal -->
-            <div id="studentDetailsModal" class="modal">
-                <div class="modal-content large">
-                    <div class="modal-header">
-                        <h3 id="studentDetailsTitle">Student Details</h3>
-                        <button class="modal-close" id="closeStudentDetailsModal">&times;</button>
+            
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <h3>Learning Progress</h3>
+                    <div class="stat-content">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-text">
+                            <span class="stat-number" id="classesJoined">0</span>
+                            <span class="stat-label">Classes Joined</span>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <div class="student-details-content">
-                            <div class="student-profile-section">
-                                <div class="student-avatar-large" id="studentDetailsAvatar">AJ</div>
-                                <div class="student-basic-info">
-                                    <h2 id="studentDetailsName">Alex Johnson</h2>
-                                    <div class="student-meta">
-                                        <span id="studentDetailsEmail">alex.johnson@email.com</span>
-                                        <span id="studentDetailsPhone">+1 (555) 123-4567</span>
-                                        <span id="studentDetailsId">ID: STU001</span>
-                                    </div>
-                                </div>
-                                <div class="student-actions">
-                                    <button class="btn btn-primary" id="editStudentBtn">Edit</button>
-                                    <button class="btn btn-danger" id="deleteStudentBtn">Delete</button>
-                                </div>
-                            </div>
-                            
-                            <div class="student-tabs">
-                                <button class="tab-btn active" data-tab="overview">Overview</button>
-                                <button class="tab-btn" data-tab="quizzes">Quiz Results</button>
-                                <button class="tab-btn" data-tab="attendance">Attendance</button>
-                                <button class="tab-btn" data-tab="notes">Notes</button>
-                            </div>
-                            
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="overview">
-                                    <div class="grid grid-2">
-                                        <div class="card">
-                                            <div class="card-header">Academic Performance</div>
-                                            <div class="card-body">
-                                                <div class="stat">
-                                                    <div class="stat-value" id="overallGrade">A+</div>
-                                                    <div class="stat-label">Overall Grade</div>
-                                                </div>
-                                                <div class="stat">
-                                                    <div class="stat-value" id="averageScore">92%</div>
-                                                    <div class="stat-label">Average Score</div>
-                                                </div>
-                                                <div class="stat">
-                                                    <div class="stat-value" id="quizzesCompleted">15</div>
-                                                    <div class="stat-label">Quizzes Completed</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="card">
-                                            <div class="card-header">Progress Tracking</div>
-                                            <div class="card-body">
-                                                <div class="progress-item">
-                                                    <div class="progress-label">Mathematics</div>
-                                                    <div class="progress-bar">
-                                                        <div class="progress-fill" style="width: 95%"></div>
-                                                    </div>
-                                                    <span class="progress-percentage">95%</span>
-                                                </div>
-                                                <div class="progress-item">
-                                                    <div class="progress-label">Science</div>
-                                                    <div class="progress-bar">
-                                                        <div class="progress-fill" style="width: 88%"></div>
-                                                    </div>
-                                                    <span class="progress-percentage">88%</span>
-                                                </div>
-                                                <div class="progress-item">
-                                                    <div class="progress-label">English</div>
-                                                    <div class="progress-bar">
-                                                        <div class="progress-fill" style="width: 92%"></div>
-                                                    </div>
-                                                    <span class="progress-percentage">92%</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="tab-pane" id="quizzes">
-                                    <div class="quiz-results-list" id="studentQuizResults">
-                                        <!-- Quiz results will be loaded here -->
-                                    </div>
-                                </div>
-                                
-                                <div class="tab-pane" id="attendance">
-                                    <div class="attendance-calendar" id="attendanceCalendar">
-                                        <!-- Attendance calendar will be loaded here -->
-                                    </div>
-                                </div>
-                                
-                                <div class="tab-pane" id="notes">
-                                    <div class="notes-section">
-                                        <div class="notes-list" id="studentNotesList">
-                                            <!-- Student notes will be loaded here -->
-                                        </div>
-                                        <div class="add-note-section">
-                                            <textarea id="newStudentNote" class="textarea" placeholder="Add a note about this student..."></textarea>
-                                            <button class="btn btn-primary" id="addStudentNoteBtn">Add Note</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                </div>
+                <div class="stat-card">
+                    <h3>This Semester</h3>
+                    <div class="stat-content">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-text">
+                            <span class="stat-number" id="quizzesCompleted">0</span>
+                            <span class="stat-label">Quizzes Completed</span>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div class="profile-footer">
+                <button id="logoutBtn" class="btn-outline logout-btn">Logout</button>
+            </div>
+        </div>
+    </dialog>
 
-            <!-- Quizzes -->
-            <section class="section" id="quizzes">
-                <div class="card">
-                    <div class="card-header">Quiz Management</div>
-                    <div class="card-body">
-                        <div class="row">
-                            <button class="btn btn-primary" id="createQuizBtn">Create New Quiz</button>
-                            <input class="input" type="text" id="quizTitleInput" placeholder="Quiz title...">
-                        </div>
-                        <div class="spacer"></div>
-                        <div class="list" id="quizzesList">
-                            <div class="quiz-card">
-                                <div class="quiz-header">
-                                    <h4 class="quiz-title">Algebra Basics - Chapter 1</h4>
-                                    <span class="pill">Active</span>
-                                </div>
-                                <div class="quiz-meta">
-                                    <span>📅 Created: 2 days ago</span>
-                                    <span>⏱️ Duration: 30 min</span>
-                                    <span>❓ Questions: 15</span>
-                                </div>
-                                <div class="quiz-stats">
-                                    <div class="quiz-stat">
-                                        <div class="num">24</div>
-                                        <div class="label">Attempts</div>
-                                    </div>
-                                    <div class="quiz-stat">
-                                        <div class="num">87%</div>
-                                        <div class="label">Avg Score</div>
-                                    </div>
-                                    <div class="quiz-stat">
-                                        <div class="num">3</div>
-                                        <div class="label">Pending</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="quiz-card">
-                                <div class="quiz-header">
-                                    <h4 class="quiz-title">Statistics Fundamentals</h4>
-                                    <span class="pill">Draft</span>
-                                </div>
-                                <div class="quiz-meta">
-                                    <span>📅 Created: 1 week ago</span>
-                                    <span>⏱️ Duration: 45 min</span>
-                                    <span>❓ Questions: 20</span>
-                                </div>
-                                <div class="quiz-stats">
-                                    <div class="quiz-stat">
-                                        <div class="num">0</div>
-                                        <div class="label">Attempts</div>
-                                    </div>
-                                    <div class="quiz-stat">
-                                        <div class="num">-</div>
-                                        <div class="label">Avg Score</div>
-                                    </div>
-                                    <div class="quiz-stat">
-                                        <div class="num">0</div>
-                                        <div class="label">Pending</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Upload Material -->
-            <section class="section" id="upload">
-                <div class="card">
-                    <div class="card-header">Upload PDFs or PPTs</div>
-                    <div class="card-body">
-                        <div class="row">
-                            <input class="input" type="file" id="fileInput" accept=".pdf,.ppt,.pptx" multiple>
-                            <button class="btn btn-primary" id="uploadBtn">Add to List</button>
-                        </div>
-                        <div class="spacer"></div>
-                        <div class="list" id="filesList"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Notes -->
-            <section class="section" id="notes">
-                <div class="card">
-                    <div class="card-header">Upload & Manage Notes</div>
-                    <div class="card-body">
-                        <div class="notes-upload" id="notesUpload">
-                            <div class="upload-icon">📝</div>
-                            <div class="upload-text">Drop notes here or click to upload</div>
-                            <div class="upload-hint">Supports PDF, DOC, TXT files</div>
-                            <input type="file" id="notesInput" accept=".pdf,.doc,.docx,.txt" multiple style="display: none;">
-                        </div>
-                        <div class="spacer"></div>
-                        <div class="list" id="notesList">
-                            <div class="list-item">
-                                <div class="meta">
-                                    <span>📄</span>
-                                    <div>
-                                        <div style="font-weight:700">Calculus Chapter 3 Notes</div>
-                                        <div class="muted">PDF • 2.3 MB • uploaded 2 days ago</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <span class="pill">PDF</span>
-                                    <button class="btn">Delete</button>
-                                </div>
-                            </div>
-                            <div class="list-item">
-                                <div class="meta">
-                                    <span>📄</span>
-                                    <div>
-                                        <div style="font-weight:700">Statistics Formulas</div>
-                                        <div class="muted">DOC • 1.1 MB • uploaded 1 week ago</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <span class="pill">DOC</span>
-                                    <button class="btn">Delete</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Start Lecture -->
-            <section class="section" id="lecture">
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="card-header">Live Session</div>
-                        <div class="card-body">
-                            <div class="row" style="align-items:center; justify-content: space-between;">
-                                <div>
-                                    <div style="font-weight:700">Status</div>
-                                    <div class="muted">Toggle to go Online or Offline</div>
-                                </div>
-                                <button class="toggle" id="liveToggle" aria-pressed="false" aria-label="Toggle live"></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">Recording</div>
-                        <div class="card-body">
-                            <div class="row" style="align-items:center; justify-content: space-between;">
-                                <div>
-                                    <div style="font-weight:700">Recording Control</div>
-                                    <div class="muted">Start/Stop recording the lecture</div>
-                                </div>
-                                <button class="btn" id="recordBtn">Start Recording</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Recordings -->
-            <section class="section" id="recordings">
-                <div class="card">
-                    <div class="card-header">Recorded Sessions</div>
-                    <div class="card-body">
-                        <div class="list" id="recordingsList"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Settings -->
-            <section class="section" id="settings">
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="card-header">Appearance</div>
-                        <div class="card-body">
-                            <div class="row" style="align-items:center; justify-content: space-between;">
-                                <div>
-                                    <div style="font-weight:700">Theme</div>
-                                    <div class="muted">Switch between light and dark</div>
-                                </div>
-                                <button class="toggle" id="themeToggle" aria-pressed="false" aria-label="Toggle theme"></button>
-                            </div>
-                            <div class="spacer"></div>
-                            <div class="field">
-                                <label style="font-weight:700">Accent Color</label>
-                                <div class="swatches" id="accentSwatches">
-                                    <!-- Accent choices -->
-                                    <div class="swatch active" data-accent="#2563eb" title="Blue" style="background:#2563eb"></div>
-                                    <div class="swatch" data-accent="#1e40af" title="Dark Blue" style="background:#1e40af"></div>
-                                    <div class="swatch" data-accent="#3b82f6" title="Light Blue" style="background:#3b82f6"></div>
-                                    <div class="swatch" data-accent="#22c55e" title="Green" style="background:#22c55e"></div>
-                                    <div class="swatch" data-accent="#f43f5e" title="Rose" style="background:#f43f5e"></div>
-                                    <div class="swatch" data-accent="#8b5cf6" title="Violet" style="background:#8b5cf6"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">About</div>
-                        <div class="card-body">
-                            <div class="muted">This is a client-only demo. Files and recordings are stored in memory for the current session and used to update dashboard counts.</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <script src="app.js"></script>
+    <script src="src/idb.js"></script>
+    <script src="src/api.js"></script>
+    <script src="src/app.js" defer></script>
 </body>
 </html>
-
-

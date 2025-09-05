@@ -7,7 +7,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
-from ..services.compression_service import CompressionService
+from ..common.quality_profiles import get_video_quality_presets, get_adaptive_profiles
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class VideoQualityService:
     def __init__(self):
         self.active_quality_settings: Dict[int, Dict] = {}  # user_id -> quality_settings
         self.quality_history: Dict[int, List[Dict]] = {}  # user_id -> quality_changes
-        self.quality_presets = CompressionService.get_video_quality_presets()
+        self.quality_presets = get_video_quality_presets()
     
     async def set_video_quality(
         self, 

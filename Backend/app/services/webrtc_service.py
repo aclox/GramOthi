@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ..models import User, Class, LiveSession, Slide
 from ..database import get_db
 from .network_quality_service import network_quality_service
-from .compression_service import CompressionService
+from ..common.quality_profiles import get_bandwidth_profiles
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +370,7 @@ class WebRTCStreamingService:
             profile_config = network_quality_service.get_adaptive_profile_config(profile)
             
             # Get compression settings
-            compression_profile = CompressionService.BANDWIDTH_PROFILES.get(profile, {})
+            compression_profile = get_bandwidth_profiles().get(profile, {})
             
             # Combine configurations
             streaming_config = {

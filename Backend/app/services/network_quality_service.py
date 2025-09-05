@@ -10,7 +10,7 @@ import logging
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timezone
 import aiohttp
-import json
+from ..common.quality_profiles import get_adaptive_profiles
 
 logger = logging.getLogger(__name__)
 
@@ -19,68 +19,7 @@ class NetworkQualityService:
     
     def __init__(self):
         self.quality_metrics = {}
-        self.adaptive_profiles = {
-            "emergency": {
-                "audio_bitrate": "8k",
-                "video_bitrate": "25k",
-                "video_fps": 3,
-                "video_resolution": "240x180",
-                "buffer_size": 512,
-                "chunk_size": 256,
-                "retry_attempts": 5,
-                "timeout": 30
-            },
-            "critical": {
-                "audio_bitrate": "16k",
-                "video_bitrate": "50k",
-                "video_fps": 5,
-                "video_resolution": "320x240",
-                "buffer_size": 1024,
-                "chunk_size": 512,
-                "retry_attempts": 3,
-                "timeout": 20
-            },
-            "poor": {
-                "audio_bitrate": "32k",
-                "video_bitrate": "100k",
-                "video_fps": 10,
-                "video_resolution": "480x360",
-                "buffer_size": 2048,
-                "chunk_size": 1024,
-                "retry_attempts": 2,
-                "timeout": 15
-            },
-            "fair": {
-                "audio_bitrate": "64k",
-                "video_bitrate": "200k",
-                "video_fps": 15,
-                "video_resolution": "640x480",
-                "buffer_size": 4096,
-                "chunk_size": 2048,
-                "retry_attempts": 2,
-                "timeout": 10
-            },
-            "good": {
-                "audio_bitrate": "128k",
-                "video_bitrate": "400k",
-                "video_fps": 24,
-                "video_resolution": "854x480",
-                "buffer_size": 8192,
-                "chunk_size": 4096,
-                "retry_attempts": 1,
-                "timeout": 8
-            },
-            "excellent": {
-                "audio_bitrate": "192k",
-                "video_bitrate": "800k",
-                "video_fps": 30,
-                "video_resolution": "1280x720",
-                "buffer_size": 16384,
-                "chunk_size": 8192,
-                "retry_attempts": 1,
-                "timeout": 5
-            }
-        }
+        self.adaptive_profiles = get_adaptive_profiles()
     
     async def detect_network_quality(self, user_id: int, test_duration: int = 10) -> Dict[str, any]:
         """

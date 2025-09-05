@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educator Dashboard (React)</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <div class="topbar">
+        <button class="hamburger" id="hamburger" aria-label="Open navigation"><span></span></button>
+        <div class="brand" style="background: transparent; box-shadow: none; padding: 8px 10px; margin: 0;">
+            <div class="brand-logo">ED</div>
+            <div class="brand-title">Educator Dashboard (React)</div>
+        </div>
+        <button class="btn btn-ghost" id="themeQuickToggle" aria-label="Toggle theme">Theme</button>
+    </div>
+
+    <div id="root"></div>
+
+    <!-- React and Babel CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-type="module" data-presets="env,react">
+        // Minimal React replica using same styles and behavior
+        const { useState, useMemo, useEffect } = React;
+
+        const storage = {
+            get(key, fallback) { try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
+            set(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
+        };
+
+        const formatBytes = bytes => {
+            if (!bytes && bytes !== 0) return "";
+            const sizes = ['B','KB','MB','GB'];
+            if (bytes === 0) return '0 B';
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            const val = bytes / Math.pow(1024, i);
+            return `${val.toFixed(val >= 100 ? 0 : val >= 10 ? 1 : 2)} ${sizes[i]}`;
+        };
+        const uid = () => Math.random().toString(36).slice(2, 9);
+
+        function App() {
+            const [section, setSection] = useState('profile');
+            const [isLive, setIsLive] = useState(false);
+            const [isRecording, setIsRecording] = useState(false);
+            const [files, setFiles] = useState([]);
+            const [notes, setNotes] = useState([]);
+            const [quizzes, setQuizzes] = useState([]);
+            const [students] = useState([
+                { id: '1', name: 'Alex Johnson', grade: 'A+', lastQuiz: 95, progress: 92 },
+                { id: '2', name: 'Sarah Miller', grade: 'A', lastQuiz: 88, progress: 88 },
+                { id: '3', name: 'Mike Davis', grade: 'B+', lastQuiz: 82, progress: 78 }
+            ]);
+            const [recs, setRecs] = useState([]);
+            const [theme, setTheme] = useState(() => storage.get('theme', 'light'));
+            const [accent, setAccent] = useState(() => storage.get('accent', '#2563eb'));
+            const [isEditingProfile, setIsEditingProfile] = useState(false);
+            const [profile, setProfile] = useState(() => storage.get('profile', {
+                name: "Dr. Sarah Johnson",
+                designation: "Senior Mathematics Professor",
+                joinDate: "Jan 2020",
+                subjects: "Math, Statistics",
+                qualification: "PhD Mathematics"
+            }));
+
+            useEffect(() => { document.documentElement.setAttribute('data-theme', theme); storage.set('theme', theme); }, [theme]);
+            useEffect(() => { const root = document.documentElement; root.style.setProperty('--accent', accent); root.style.setProperty('--accent-strong', accent); storage.set('accent', accent); }, [accent]);
+
+            useEffect(() => {
+                const btn = document.getElementById('themeQuickToggle');
+                btn?.addEventListener('click', () => setTheme(t => t === 'dark' ? 'light' : 'dark'));
+                const ham = document.getElementById('hamburger');
+                ham?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('open'));
+            }, []);
+
+            const addFiles = (list) => {
+                const accepted = ['application/pdf','application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation'];
+                const next = [];
+                for (const f of list) {
+                    const ok = accepted.includes(f.type) || /\.(pdf|ppt|pptx)$/i.test(f.name);
+                    if (ok) next.push({ id: uid(), name: f.name, size: f.size, type: f.type, addedAt: Date.now() });
+                }
+                if (next.length) setFiles(curr => [...curr, ...next]);
+            };
+
+            const addNotes = (list) => {
+                const accepted = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','text/plain'];
+                const next = [];
+                for (const f of list) {
+                    const ok = accepted.includes(f.type) || /\.(pdf|doc|docx|txt)$/i.test(f.name);
+                    if (ok) next.push({ id: uid(), name: f.name, size: f.size, type: f.type, addedAt: Date.now() });
+                }
+                if (next.length) setNotes(curr => [...curr, ...next]);
+            };
+
+            const createQuiz = (title) => {
+                if (!title?.trim()) return;
+                setQuizzes(curr => [{ id: uid(), title: title.trim(), status: 'Draft', questions: 0, attempts: 0, avgScore: 0, pending: 0, createdAt: Date.now() }, ...curr]);
+            };
+
+            const saveProfile = (newProfile) => {
+                setProfile(newProfile);
+                storage.set('profile', newProfile);
+                setIsEditingProfile(false);
+            };
+
+            const getInitials = (name) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+            const stopRecording = () => {
+                setRecs(curr => [{ id: uid(), title: `Lecture • ${new Date().toLocaleString()}`, startedAt: Date.now() }, ...curr]);
+            };
+
+            // Profile Edit Form Component
+            function ProfileEditForm({ profile, onSave, onCancel }) {
+                const [formData, setFormData] = useState(profile);
+                
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    onSave(formData);
+                };
+                
+                const handleChange = (field, value) => {
+                    setFormData(prev => ({ ...prev, [field]: value }));
+                };
+                
+                return (
+                    <form className="profile-form" onSubmit={handleSubmit}>
+                        <div className="form-row">
+                            <div className="field">
+                                <label>Full Name</label>
+                                <input className="input" type="text" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Designation</label>
+                                <input className="input" type="text" value={formData.designation} onChange={(e) => handleChange('designation', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="field">
+                                <label>Join Date</label>
+                                <input className="input" type="text" value={formData.joinDate} onChange={(e) => handleChange('joinDate', e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Qualification</label>
+                                <input className="input" type="text" value={formData.qualification} onChange={(e) => handleChange('qualification', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="field form-full">
+                            <label>Subjects</label>
+                            <input className="input" type="text" value={formData.subjects} onChange={(e) => handleChange('subjects', e.target.value)} placeholder="Separate subjects with commas" />
+                        </div>
+                        <div className="profile-actions">
+                            <button type="button" className="btn" onClick={onCancel}>Cancel</button>
+                            <button type="submit" className="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                );
+            }
+
+            return (
+                <div className="app">
+                    <aside className="sidebar" id="sidebar">
+                        <div className="brand">
+                            <div className="brand-logo">ED</div>
+                            <div className="brand-title">Educator Dashboard</div>
+                        </div>
+                        <nav className="nav" id="nav">
+                            {['profile','dashboard','students','quizzes','upload','notes','lecture','recordings','settings'].map(id => (
+                                <button key={id} className={section===id? 'active': ''} onClick={() => setSection(id)}><span className="dot"></span>{id.charAt(0).toUpperCase()+id.slice(1)}</button>
+                            ))}
+                        </nav>
+                    </aside>
+
+                    <main className="main">
+                        <header className="header">
+                            <div className="title">Welcome, Teacher</div>
+                            <div className="actions">
+                                <span className="chip">{`Live: ${isLive ? 'Online' : 'Offline'}`}</span>
+                                <button className="btn" onClick={() => { if (isRecording) { setIsRecording(false); stopRecording(); } else { setIsRecording(true); } }}>{`Recording: ${isRecording ? 'On' : 'Off'}`}</button>
+                                <button className="btn btn-primary" onClick={() => setSection('upload')} data-target="upload">Upload</button>
+                            </div>
+                        </header>
+
+                        {/* Profile */}
+                        <section className={`section ${section==='profile' ? 'active' : ''}`} id="profile">
+                            <div className={`profile-card ${isEditingProfile ? 'editing' : ''}`}>
+                                <button className="profile-edit-btn" onClick={() => setIsEditingProfile(!isEditingProfile)}>
+                                    {isEditingProfile ? 'Cancel' : 'Edit Profile'}
+                                </button>
+                                
+                                {!isEditingProfile ? (
+                                    <div>
+                                        <div className="profile-avatar">{getInitials(profile.name)}</div>
+                                        <div className="profile-info">
+                                            <h3>{profile.name}</h3>
+                                            <div className="designation">{profile.designation}</div>
+                                            <div className="meta">
+                                                <span>📅 Joined: {profile.joinDate}</span>
+                                                <span>📚 Subjects: {profile.subjects}</span>
+                                                <span>🎓 {profile.qualification}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <ProfileEditForm profile={profile} onSave={saveProfile} onCancel={() => setIsEditingProfile(false)} />
+                                )}
+                            </div>
+                            
+                            <div className="spacer"></div>
+                            
+                            <div className="grid grid-2">
+                                <div className="card">
+                                    <div className="card-header">Teaching Statistics</div>
+                                    <div className="card-body">
+                                        <div className="stat">
+                                            <div className="stat-icon">👥</div>
+                                            <div>
+                                                <div className="num">{students.length}</div>
+                                                <div className="label">Active Students</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="card">
+                                    <div className="card-header">This Semester</div>
+                                    <div className="card-body">
+                                        <div className="stat">
+                                            <div className="stat-icon">📊</div>
+                                            <div>
+                                                <div className="num">{quizzes.length}</div>
+                                                <div className="label">Quizzes Created</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Dashboard */}
+                        <section className={`section ${section==='dashboard' ? 'active' : ''}`} id="dashboard">
+                            <div className="grid grid-3">
+                                <div className="card"><div className="card-body stat"><div className="stat-icon">📚</div><div><div className="num">3</div><div className="label">Total Classes</div></div></div></div>
+                                <div className="card"><div className="card-body stat"><div className="stat-icon">🗂️</div><div><div className="num">{files.length}</div><div className="label">Uploaded Files</div></div></div></div>
+                                <div className="card"><div className="card-body stat"><div className="stat-icon">🎥</div><div><div className="num">{recs.length}</div><div className="label">Recorded Sessions</div></div></div></div>
+                            </div>
+
+                            <div className="spacer"></div>
+                            <div className="grid grid-2">
+                                <div className="card">
+                                    <div className="card-header">Recent Uploads</div>
+                                    <div className="card-body">
+                                        <div className={`list ${files.length ? '' : 'muted'}`}>
+                                            {files.length ? files.slice(-5).reverse().map(f => (
+                                                <div key={f.id} className="list-item">
+                                                    <div className="meta"><span>📄</span><div><div style={{fontWeight:700}}>{f.name}</div><div className="muted">{`${formatBytes(f.size)} • ${f.type || 'file'} • ${new Date(f.addedAt).toLocaleDateString()}`}</div></div></div>
+                                                    <span className="pill">NEW</span>
+                                                </div>
+                                            )) : 'No files uploaded yet.'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="card">
+                                    <div className="card-header">Recent Recordings</div>
+                                    <div className="card-body">
+                                        <div className={`list ${recs.length ? '' : 'muted'}`}>
+                                            {recs.length ? recs.slice(-5).reverse().map(r => (
+                                                <div key={r.id} className="list-item">
+                                                    <div className="meta"><span>🎥</span><div><div style={{fontWeight:700}}>{r.title}</div><div className="muted">{new Date(r.startedAt).toLocaleString()}</div></div></div>
+                                                    <span className="pill">REC</span>
+                                                </div>
+                                            )) : 'No recordings yet.'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Students */}
+                        <section className={`section ${section==='students' ? 'active' : ''}`} id="students">
+                            <div className="card">
+                                <div className="card-header">Student Progress & Quiz Results</div>
+                                <div className="card-body">
+                                    <div className="list">
+                                        {students.map(s => (
+                                            <div key={s.id} className="student-card">
+                                                <div className="student-avatar">{s.name.split(' ').map(n => n[0]).join('')}</div>
+                                                <div className="student-info">
+                                                    <h4>{s.name}</h4>
+                                                    <div className="grade">Grade: {s.grade} | Last Quiz: {s.lastQuiz}%</div>
+                                                </div>
+                                                <div className="student-progress">
+                                                    <div className="progress-label">Overall Progress</div>
+                                                    <div className="progress-bar">
+                                                        <div className="progress-fill" style={{width: `${s.progress}%`}}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Quizzes */}
+                        <section className={`section ${section==='quizzes' ? 'active' : ''}`} id="quizzes">
+                            <div className="card">
+                                <div className="card-header">Quiz Management</div>
+                                <div className="card-body">
+                                    <div className="row">
+                                        <button className="btn btn-primary" onClick={() => { const title = prompt('Quiz title:'); if (title) createQuiz(title); }}>Create New Quiz</button>
+                                    </div>
+                                    <div className="spacer"></div>
+                                    <div className="list">
+                                        {quizzes.length ? quizzes.map(q => (
+                                            <div key={q.id} className="quiz-card">
+                                                <div className="quiz-header">
+                                                    <h4 className="quiz-title">{q.title}</h4>
+                                                    <span className="pill">{q.status}</span>
+                                                </div>
+                                                <div className="quiz-meta">
+                                                    <span>📅 Created: {new Date(q.createdAt).toLocaleDateString()}</span>
+                                                    <span>⏱️ Duration: 30 min</span>
+                                                    <span>❓ Questions: {q.questions}</span>
+                                                </div>
+                                                <div className="quiz-stats">
+                                                    <div className="quiz-stat">
+                                                        <div className="num">{q.attempts}</div>
+                                                        <div className="label">Attempts</div>
+                                                    </div>
+                                                    <div className="quiz-stat">
+                                                        <div className="num">{q.avgScore || '-'}</div>
+                                                        <div className="label">Avg Score</div>
+                                                    </div>
+                                                    <div className="quiz-stat">
+                                                        <div className="num">{q.pending}</div>
+                                                        <div className="label">Pending</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )) : <div className="muted">No quizzes created yet.</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Upload */}
+                        <section className={`section ${section==='upload' ? 'active' : ''}`} id="upload">
+                            <div className="card">
+                                <div className="card-header">Upload PDFs or PPTs</div>
+                                <div className="card-body">
+                                    <div className="row">
+                                        <input className="input" type="file" accept=".pdf,.ppt,.pptx" multiple onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+                                    </div>
+                                    <div className="spacer"></div>
+                                    <div className="list">
+                                        {files.length ? [...files].reverse().map(file => (
+                                            <div key={file.id} className="list-item">
+                                                <div className="meta"><span>📄</span><div><div style={{fontWeight:700}}>{file.name}</div><div className="muted">{`${formatBytes(file.size)} • added ${new Date().toLocaleString()}`}</div></div></div>
+                                                <div className="row">
+                                                    <span className="pill">{/\.pdf$/i.test(file.name) ? 'PDF' : 'PPT'}</span>
+                                                    <button className="btn" onClick={() => setFiles(curr => curr.filter(f => f.id !== file.id))}>Delete</button>
+                                                </div>
+                                            </div>
+                                        )) : <div className="muted">No files yet. Use the file picker to add PDFs/PPTs.</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Notes */}
+                        <section className={`section ${section==='notes' ? 'active' : ''}`} id="notes">
+                            <div className="card">
+                                <div className="card-header">Upload & Manage Notes</div>
+                                <div className="card-body">
+                                    <div className="notes-upload" onClick={() => document.getElementById('notesInput')?.click()}>
+                                        <div className="upload-icon">📝</div>
+                                        <div className="upload-text">Drop notes here or click to upload</div>
+                                        <div className="upload-hint">Supports PDF, DOC, TXT files</div>
+                                        <input type="file" id="notesInput" accept=".pdf,.doc,.docx,.txt" multiple style={{display: 'none'}} onChange={(e) => { addNotes(e.target.files); e.target.value = ''; }} />
+                                    </div>
+                                    <div className="spacer"></div>
+                                    <div className="list">
+                                        {notes.length ? notes.map(n => (
+                                            <div key={n.id} className="list-item">
+                                                <div className="meta">
+                                                    <span>📄</span>
+                                                    <div>
+                                                        <div style={{fontWeight:700}}>{n.name}</div>
+                                                        <div className="muted">{`${formatBytes(n.size)} • uploaded ${new Date().toLocaleString()}`}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="row">
+                                                    <span className="pill">{/\.pdf$/i.test(n.name) ? 'PDF' : /\.doc$/i.test(n.name) ? 'DOC' : 'TXT'}</span>
+                                                    <button className="btn" onClick={() => setNotes(curr => curr.filter(x => x.id !== n.id))}>Delete</button>
+                                                </div>
+                                            </div>
+                                        )) : <div className="muted">No notes uploaded yet.</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Lecture */}
+                        <section className={`section ${section==='lecture' ? 'active' : ''}`} id="lecture">
+                            <div className="grid grid-2">
+                                <div className="card"><div className="card-header">Live Session</div><div className="card-body"><div className="row" style={{alignItems:'center', justifyContent:'space-between'}}><div><div style={{fontWeight:700}}>Status</div><div className="muted">Toggle to go Online or Offline</div></div><button className={`toggle ${isLive ? 'active' : ''}`} aria-pressed={isLive} onClick={() => setIsLive(v => !v)}></button></div></div></div>
+                                <div className="card"><div className="card-header">Recording</div><div className="card-body"><div className="row" style={{alignItems:'center', justifyContent:'space-between'}}><div><div style={{fontWeight:700}}>Recording Control</div><div className="muted">Start/Stop recording the lecture</div></div><button className="btn" onClick={() => { if (isRecording) { setIsRecording(false); stopRecording(); } else { setIsRecording(true); } }}>{isRecording ? 'Stop Recording' : 'Start Recording'}</button></div></div></div>
+                            </div>
+                        </section>
+
+                        {/* Recordings */}
+                        <section className={`section ${section==='recordings' ? 'active' : ''}`} id="recordings">
+                            <div className="card">
+                                <div className="card-header">Recorded Sessions</div>
+                                <div className="card-body">
+                                    <div className="list">
+                                        {recs.length ? recs.map(r => (
+                                            <div key={r.id} className="list-item">
+                                                <div className="meta"><span>🎥</span><div><div style={{fontWeight:700}}>{r.title}</div><div className="muted">{new Date(r.startedAt).toLocaleString()}</div></div></div>
+                                                <button className="btn" onClick={() => setRecs(curr => curr.filter(x => x.id !== r.id))}>Delete</button>
+                                            </div>
+                                        )) : <div className="muted">No recordings yet. Use Start/Stop recording to add one.</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Settings */}
+                        <section className={`section ${section==='settings' ? 'active' : ''}`} id="settings">
+                            <div className="grid grid-2">
+                                <div className="card">
+                                    <div className="card-header">Appearance</div>
+                                    <div className="card-body">
+                                        <div className="row" style={{alignItems:'center', justifyContent:'space-between'}}>
+                                            <div><div style={{fontWeight:700}}>Theme</div><div className="muted">Switch between light and dark</div></div>
+                                            <button className={`toggle ${theme==='dark' ? 'active' : ''}`} aria-pressed={theme==='dark'} onClick={() => setTheme(t => t==='dark'?'light':'dark')}></button>
+                                        </div>
+                                        <div className="spacer"></div>
+                                        <div className="field">
+                                            <label style={{fontWeight:700}}>Accent Color</label>
+                                            <div className="swatches">
+                                                {["#2563eb","#1e40af","#3b82f6","#22c55e","#f43f5e","#8b5cf6"].map(hex => (
+                                                    <div key={hex} className={`swatch ${accent===hex?'active':''}`} style={{background:hex}} onClick={() => setAccent(hex)}></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="card"><div className="card-header">About</div><div className="card-body"><div className="muted">This is a client-only demo. Files and recordings are stored in memory for the current session and used to update dashboard counts.</div></div></div>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

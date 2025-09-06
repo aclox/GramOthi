@@ -35,30 +35,30 @@ if not os.path.exists(uploads_dir):
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Include routers
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(class_routes.router, prefix="/api/v1")
-app.include_router(quiz.router, prefix="/api/v1")
-app.include_router(live.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api")
+app.include_router(class_routes.router, prefix="/api")
+app.include_router(quiz.router, prefix="/api")
+app.include_router(live.router, prefix="/api")
 
 # Import and include media router
 from .routes import media
-app.include_router(media.router, prefix="/api/v1")
+app.include_router(media.router, prefix="/api")
 
 # Import and include progress router
 from .routes import progress
-app.include_router(progress.router, prefix="/api/v1")
+app.include_router(progress.router, prefix="/api")
 
 # Import and include notification router
 from .routes import notifications
-app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api")
 
 # Import and include sync router
 from .routes import sync
-app.include_router(sync.router, prefix="/api/v1")
+app.include_router(sync.router, prefix="/api")
 
 # Import and include streaming router
 from .routes import streaming
-app.include_router(streaming.router, prefix="/api/v1")
+app.include_router(streaming.router, prefix="/api")
 
 # Health check endpoint
 @app.get("/health")

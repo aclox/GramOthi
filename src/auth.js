@@ -120,8 +120,9 @@ async function loginUser(email, password) {
             const data = await response.json();
             handleAuthSuccess(data);
         } else {
-            // Fallback to local authentication for demo
-            handleLocalAuth(email, password);
+            const errorData = await response.json();
+            console.error('Login failed:', errorData.detail);
+            showError('Login failed: ' + (errorData.detail || 'Unknown error'));
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -154,8 +155,9 @@ async function registerUser(email, password) {
             const data = await response.json();
             handleAuthSuccess(data);
         } else {
-            // Fallback to local registration
-            handleLocalRegistration(email, password);
+            const errorData = await response.json();
+            console.error('Registration failed:', errorData.detail);
+            showError('Registration failed: ' + (errorData.detail || 'Unknown error'));
         }
     } catch (error) {
         console.error('Registration error:', error);
@@ -274,6 +276,35 @@ function showLoading(show) {
 function logout() {
     clearAuthData();
     window.location.href = 'auth.html';
+}
+
+function showError(message) {
+    // Create or update error display
+    let errorDiv = document.getElementById('authError');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'authError';
+        errorDiv.style.cssText = `
+            background: #f44336;
+            color: white;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 6px;
+            text-align: center;
+        `;
+        const authForm = document.getElementById('authForm');
+        if (authForm) {
+            authForm.parentNode.insertBefore(errorDiv, authForm);
+        }
+    }
+    errorDiv.textContent = message;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }, 5000);
 }
 
 // Export functions for global access

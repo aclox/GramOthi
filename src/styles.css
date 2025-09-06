@@ -1,8 +1,16 @@
-/* Student Dashboard Styles */
+/* Student Dashboard Styles - Safari Compatible */
 * {
     margin: 0;
     padding: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
     box-sizing: border-box;
+}
+
+/* Safari-specific fixes */
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 body {
@@ -10,20 +18,35 @@ body {
     background: #f5f5f5;
     color: #333;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 .app-header {
     background: #1565c0;
     color: white;
     padding: 1rem 2rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
     justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .header-right {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 1rem;
 }
@@ -31,6 +54,7 @@ body {
 .chip {
     background: rgba(255,255,255,0.2);
     padding: 0.5rem 1rem;
+    -webkit-border-radius: 20px;
     border-radius: 20px;
     font-size: 0.9rem;
 }
@@ -40,9 +64,12 @@ body {
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
+    -webkit-border-radius: 6px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.9rem;
+    -webkit-transition: background 0.3s;
+    -o-transition: background 0.3s;
     transition: background 0.3s;
 }
 
@@ -62,6 +89,8 @@ body {
 }
 
 .hero {
+    background: -webkit-linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
+    background: -o-linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
     background: linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
     color: white;
     padding: 3rem 2rem;
@@ -96,9 +125,12 @@ body {
 
 .tabs {
     background: white;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     border-bottom: 1px solid #e0e0e0;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .tab {
@@ -106,10 +138,16 @@ body {
     border: none;
     padding: 1rem 1.5rem;
     cursor: pointer;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 0.5rem;
     color: #666;
+    -webkit-transition: all 0.3s;
+    -o-transition: all 0.3s;
     transition: all 0.3s;
     white-space: nowrap;
 }
@@ -140,16 +178,22 @@ body {
 }
 
 .dashboard {
+    display: -ms-grid;
     display: grid;
+    -ms-grid-columns: 300px 1fr;
     grid-template-columns: 300px 1fr;
     gap: 2rem;
 }
 
 .sidebar {
     background: white;
+    -webkit-border-radius: 8px;
     border-radius: 8px;
     padding: 1.5rem;
+    -webkit-box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    height: -webkit-fit-content;
+    height: -moz-fit-content;
     height: fit-content;
 }
 
@@ -161,7 +205,12 @@ body {
 }
 
 .side-nav {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
     gap: 0.5rem;
 }
@@ -172,8 +221,11 @@ body {
     padding: 0.75rem 1rem;
     text-align: left;
     cursor: pointer;
+    -webkit-border-radius: 6px;
     border-radius: 6px;
     color: #666;
+    -webkit-transition: all 0.3s;
+    -o-transition: all 0.3s;
     transition: all 0.3s;
 }
 
@@ -189,30 +241,45 @@ body {
 
 .card {
     background: white;
+    -webkit-border-radius: 8px;
     border-radius: 8px;
     padding: 1.5rem;
+    -webkit-box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 1rem;
 }
 
 .topbar {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
 
 .search {
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
     flex: 1;
     padding: 0.75rem 1rem;
     border: 1px solid #e0e0e0;
+    -webkit-border-radius: 6px;
     border-radius: 6px;
     font-size: 0.9rem;
 }
 
 .welcome {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
     justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     margin-bottom: 1.5rem;
 }
@@ -228,6 +295,8 @@ body {
 }
 
 .actions {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     gap: 1rem;
 }
@@ -238,12 +307,14 @@ body {
 }
 
 .side-widgets {
+    display: -ms-grid;
     display: grid;
     gap: 1rem;
 }
 
 .calendar {
     background: #f8f9ff;
+    -webkit-border-radius: 6px;
     border-radius: 6px;
     padding: 1rem;
 }
@@ -255,20 +326,31 @@ body {
 }
 
 .cal-grid {
+    display: -ms-grid;
     display: grid;
+    -ms-grid-columns: (1fr)[7];
     grid-template-columns: repeat(7, 1fr);
     gap: 0.25rem;
 }
 
 .cal-day {
     aspect-ratio: 1;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     font-size: 0.8rem;
     color: #666;
     cursor: pointer;
+    -webkit-border-radius: 4px;
     border-radius: 4px;
+    -webkit-transition: background 0.3s;
+    -o-transition: background 0.3s;
     transition: background 0.3s;
 }
 
@@ -289,8 +371,14 @@ body {
 .list li {
     padding: 0.75rem 0;
     border-bottom: 1px solid #f0f0f0;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
     justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
 }
 
@@ -311,28 +399,45 @@ body {
 }
 
 .profile-modal[open] {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
 }
 
 .profile-page {
     background: white;
+    -webkit-border-radius: 12px;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
+    -webkit-box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
 .profile-header {
+    background: -webkit-linear-gradient(135deg, #1565c0, #2196f3);
+    background: -o-linear-gradient(135deg, #1565c0, #2196f3);
     background: linear-gradient(135deg, #1565c0, #2196f3);
     color: white;
     padding: 2rem;
+    -webkit-border-radius: 12px 12px 0 0;
     border-radius: 12px 12px 0 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
     justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
 }
 
@@ -351,11 +456,13 @@ body {
 }
 
 .profile-form {
+    display: -ms-grid;
     display: grid;
     gap: 1.5rem;
 }
 
 .form-column {
+    display: -ms-grid;
     display: grid;
     gap: 1rem;
 }
@@ -371,6 +478,7 @@ body {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #e0e0e0;
+    -webkit-border-radius: 6px;
     border-radius: 6px;
     font-size: 0.9rem;
 }
@@ -378,26 +486,35 @@ body {
 .profile-form input:focus {
     outline: none;
     border-color: #2196f3;
+    -webkit-box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
     box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .profile-photo {
     width: 100px;
     height: 100px;
+    -webkit-border-radius: 50%;
     border-radius: 50%;
+    -o-object-fit: cover;
     object-fit: cover;
     border: 3px solid #e0e0e0;
 }
 
 .form-actions {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     gap: 1rem;
+    -webkit-box-pack: end;
+    -ms-flex-pack: end;
     justify-content: flex-end;
     margin-top: 2rem;
 }
 
 .profile-stats {
+    display: -ms-grid;
     display: grid;
+    -ms-grid-columns: (minmax(150px, 1fr))[auto-fit];
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
     margin: 2rem 0;
@@ -407,6 +524,7 @@ body {
     text-align: center;
     padding: 1rem;
     background: #f8f9ff;
+    -webkit-border-radius: 8px;
     border-radius: 8px;
 }
 
@@ -437,13 +555,59 @@ body {
     background: #d32f2f;
 }
 
+/* Safari-specific fixes for better compatibility */
+input, button, textarea, select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 6px;
+}
+
+button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* Fix for Safari flexbox issues */
+.flex-container {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.flex-item {
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+
+/* Fix for Safari grid issues */
+.grid-container {
+    display: -ms-grid;
+    display: grid;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .dashboard {
+        -ms-grid-columns: 1fr;
         grid-template-columns: 1fr;
     }
     
     .sidebar {
+        -webkit-box-ordinal-group: 3;
+        -ms-flex-order: 2;
         order: 2;
     }
     
@@ -452,10 +616,13 @@ body {
     }
     
     .tabs {
+        -ms-flex-wrap: wrap;
         flex-wrap: wrap;
     }
     
     .tab {
+        -webkit-box-flex: 1;
+        -ms-flex: 1;
         flex: 1;
         min-width: 120px;
     }
@@ -475,5 +642,18 @@ body {
     
     .profile-main {
         padding: 1.5rem;
+    }
+}
+
+/* Safari-specific media queries */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .hero {
+        background: -webkit-linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
+        background: linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
+    }
+    
+    .profile-header {
+        background: -webkit-linear-gradient(135deg, #1565c0, #2196f3);
+        background: linear-gradient(135deg, #1565c0, #2196f3);
     }
 }

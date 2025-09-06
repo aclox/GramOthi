@@ -3,78 +3,133 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Student Dashboard</title>
+    <title>GramOthi - Educational Platform</title>
     <meta name="theme-color" content="#0d47a1">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <header class="app-header">
-        <h1>Student Dashboard</h1>
-        <div class="header-right">
-            <div id="liveClock" class="chip"></div>
-            <button id="installBtn" class="btn btn-outline" hidden>Install App</button>
-            <div class="avatar header-avatar" title="Profile">⌁</div>
-        </div>
-    </header>
-    <section class="hero">
-        <div class="hero-inner">
-            <h2 class="hero-title">Learn anywhere, even on 2G</h2>
-            <p class="hero-sub">Audio-first classes, lightweight slides, offline quizzes.</p>
-        </div>
-        <svg class="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0,64L80,53.3C160,43,320,21,480,37.3C640,53,800,107,960,117.3C1120,128,1280,96,1360,80L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" fill="url(#g)" opacity="0.7"></path>
-            <defs>
-                <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stop-color="#1565c0"/>
-                    <stop offset="100%" stop-color="#2196f3"/>
-                </linearGradient>
-            </defs>
-        </svg>
-    </section>
-
-    <nav class="tabs" role="tablist">
-        <button class="tab active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
-        <button class="tab" data-tab="classes"><span class="icon">🏫</span><span>Classes</span></button>
-        <button class="tab" data-tab="slides"><span class="icon">🖼️</span><span>Slides</span></button>
-        <button class="tab" data-tab="video"><span class="icon">🎥</span><span>Videos</span></button>
-        <button class="tab" data-tab="quizzes"><span class="icon">📝</span><span>Quizzes</span></button>
-        <button class="tab" data-tab="downloads"><span class="icon">⬇️</span><span>Downloads</span></button>
-    </nav>
-
-    <main class="content">
-        <section id="tab-dashboard" class="panel active" aria-labelledby="Dashboard">
-            <div class="dashboard">
-                <aside class="sidebar card" id="sidebar">
-                    <div class="brand">ProServe <button id="sideClose" class="chip" style="float:right">✖</button></div>
-                    <nav class="side-nav">
-                        <button class="side-item active" data-panel="tasks">Tasks</button>
-                        <button class="side-item" data-panel="files">Files</button>
-                        <button class="side-item" data-panel="analytics">Analytics</button>
-                        <button class="side-item" data-panel="integrations">Integrations</button>
-                        <button class="side-item" data-panel="notifications">Notifications</button>
-                        <button class="side-item" data-panel="settings">Settings</button>
-                    </nav>
-                </aside>
-                <section class="main">
-                    <div class="topbar card">
-                        <button id="sideOpen" class="btn-outline" style="margin-right:8px">☰</button>
-                        <input type="search" class="search" id="globalSearch" placeholder="Search" />
-                        <button id="searchBtn" class="btn" title="Search" style="margin-left:8px">🔍</button>
+    <!-- Authentication Section -->
+    <div id="authSection" class="auth-section" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+            
+            <div id="loginForm" class="auth-form active">
+                <h2>Welcome Back</h2>
+                <div style="display:flex;gap:8px;margin-bottom:20px">
+                    <button id="roleStudent" class="btn">Student</button>
+                    <button id="roleTeacher" class="btn-outline">Teacher</button>
+                </div>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required placeholder="you@example.com">
                     </div>
-                    <div class="welcome card">
-                        <div>
-                            <h3>Welcome Back!</h3>
-                            <p class="muted">Check your tasks and schedule</p>
-                            <div class="actions">
-                                <button class="btn">new task +</button>
-                                <button class="btn-outline">Discover</button>
-                            </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <p class="text-muted" style="margin-top:8px">No account? Click register to create one.</p>
+                </form>
+            </div>
+            
+            <div id="registerForm" class="auth-form">
+                <h2>Create Account</h2>
+                <div style="display:flex;gap:8px;margin-bottom:20px">
+                    <button id="roleStudentReg" class="btn">Student</button>
+                    <button id="roleTeacherReg" class="btn-outline">Teacher</button>
+                </div>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regName">Full Name</label>
+                        <input type="text" id="regName" required placeholder="Enter full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" required placeholder="you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="studentDashboard" class="main-app" style="display: none;">
+        <header class="app-header">
+            <h1>Student Dashboard</h1>
+            <div class="header-right">
+                <div id="liveClock" class="chip"></div>
+                <button id="installBtn" class="btn btn-outline" hidden>Install App</button>
+                <div class="avatar header-avatar" title="Profile">⌁</div>
+            </div>
+        </header>
+        <section class="hero">
+            <div class="hero-inner">
+                <h2 class="hero-title">Learn anywhere, even on 2G</h2>
+                <p class="hero-sub">Audio-first classes, lightweight slides, offline quizzes.</p>
+            </div>
+            <svg class="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,64L80,53.3C160,43,320,21,480,37.3C640,53,800,107,960,117.3C1120,128,1280,96,1360,80L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" fill="url(#g)" opacity="0.7"></path>
+                <defs>
+                    <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stop-color="#1565c0"/>
+                        <stop offset="100%" stop-color="#2196f3"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </section>
+
+        <nav class="tabs" role="tablist">
+            <button class="tab active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+            <button class="tab" data-tab="classes"><span class="icon">🏫</span><span>Classes</span></button>
+            <button class="tab" data-tab="slides"><span class="icon">🖼️</span><span>Slides</span></button>
+            <button class="tab" data-tab="video"><span class="icon">🎥</span><span>Videos</span></button>
+            <button class="tab" data-tab="quizzes"><span class="icon">📝</span><span>Quizzes</span></button>
+            <button class="tab" data-tab="downloads"><span class="icon">⬇️</span><span>Downloads</span></button>
+        </nav>
+
+        <main class="content">
+            <section id="tab-dashboard" class="panel active" aria-labelledby="Dashboard">
+                <div class="dashboard">
+                    <aside class="sidebar card" id="sidebar">
+                        <div class="brand">ProServe <button id="sideClose" class="chip" style="float:right">✖</button></div>
+                        <nav class="side-nav">
+                            <button class="side-item active" data-panel="tasks">Tasks</button>
+                            <button class="side-item" data-panel="files">Files</button>
+                            <button class="side-item" data-panel="analytics">Analytics</button>
+                            <button class="side-item" data-panel="integrations">Integrations</button>
+                            <button class="side-item" data-panel="notifications">Notifications</button>
+                            <button class="side-item" data-panel="settings">Settings</button>
+                        </nav>
+                    </aside>
+                    <section class="main">
+                        <div class="topbar card">
+                            <button id="sideOpen" class="btn-outline" style="margin-right:8px">☰</button>
+                            <input type="search" class="search" id="globalSearch" placeholder="Search" />
+                            <button id="searchBtn" class="btn" title="Search" style="margin-left:8px">🔍</button>
                         </div>
-                        <div class="cube">⬛</div>
-                    </div>
-                    <div class="card side-widgets" id="contextPanel">
+                        <div class="welcome card">
+                            <div>
+                                <h3>Welcome Back!</h3>
+                                <p class="muted">Check your tasks and schedule</p>
+                                <div class="actions">
+                                    <button class="btn">new task +</button>
+                                    <button class="btn-outline">Discover</button>
+                                </div>
+                            </div>
+                            <div class="cube">⬛</div>
+                        </div>
+                        <div class="card side-widgets" id="contextPanel">
                             <div class="calendar small">
                                 <div class="title" id="calTitle">Month YYYY</div>
                                 <div class="cal-grid" id="calGrid"></div>
@@ -83,93 +138,259 @@
                                 <div class="title">Upcoming Tasks</div>
                                 <ul id="upcomingList" class="list"></ul>
                             </div>
-                    </div>
-                </section>
+                        </div>
+                    </section>
+                </div>
+            </section>
+            <section id="tab-classes" class="panel">
+                <h2>Join Classes</h2>
+                <form id="joinClassForm" class="card">
+                    <label>
+                        Class Code
+                        <input id="classCode" type="text" required placeholder="e.g., CS101" />
+                    </label>
+                    <button type="submit" class="btn">Join</button>
+                </form>
+                <ul id="classList" class="list"></ul>
+            </section>
+            <section id="tab-slides" class="panel">
+                <h2>Slides</h2>
+                <div id="slidesList" class="list"></div>
+            </section>
+            <section id="tab-video" class="panel">
+                <h2>Videos</h2>
+                <div id="videosList" class="list"></div>
+            </section>
+            <section id="tab-quizzes" class="panel">
+                <h2>Quizzes</h2>
+                <div id="quizzesList" class="list"></div>
+            </section>
+            <section id="tab-downloads" class="panel">
+                <h2>Downloads</h2>
+                <div id="downloadsList" class="list"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Teacher Dashboard -->
+    <div id="teacherDashboard" class="main-app" style="display: none;">
+        <header class="app-header">
+            <h1>Teacher Dashboard</h1>
+            <div class="header-right">
+                <div id="liveClock" class="chip"></div>
+                <button id="installBtn" class="btn btn-outline" hidden>Install App</button>
+                <div class="avatar header-avatar" title="Profile">👨‍🏫</div>
             </div>
-        </section>
-        <section id="tab-classes" class="panel active" aria-labelledby="Classes">
-            <h2>Join Classes</h2>
-            <form id="joinClassForm" class="card">
-                <label>
-                    Class Code
-                    <input id="classCode" type="text" required placeholder="e.g., CS101" />
-                </label>
-                <button type="submit" class="btn">Join</button>
-            </form>
-            <ul id="classList" class="list"></ul>
-        </section>
-
-        <section id="tab-slides" class="panel" aria-labelledby="Slides">
-            <h2>Slides</h2>
-            <div id="slidesContainer" class="grid"></div>
-        </section>
-
-        <section id="tab-video" class="panel" aria-labelledby="Videos">
-            <h2>Recorded Lectures</h2>
-            <ul id="videoList" class="list"></ul>
-            <video id="videoPlayer" controls preload="none" playsinline style="width:100%;max-height:420px;border-radius:10px"></video>
-            <div class="progress-wrap"><div id="videoProgress" class="progress"></div></div>
+        </header>
+        <section class="hero">
+            <div class="hero-inner">
+                <h2 class="hero-title">Teach anywhere, even on 2G</h2>
+                <p class="hero-sub">Create classes, manage students, conduct live sessions.</p>
+            </div>
+            <svg class="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,64L80,53.3C160,43,320,21,480,37.3C640,53,800,107,960,117.3C1120,128,1280,96,1360,80L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" fill="url(#g)" opacity="0.7"></path>
+                <defs>
+                    <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stop-color="#1565c0"/>
+                        <stop offset="100%" stop-color="#2196f3"/>
+                    </linearGradient>
+                </defs>
+            </svg>
         </section>
 
-        <section id="tab-quizzes" class="panel" aria-labelledby="Quizzes">
-            <h2>Quizzes</h2>
-            <div id="quizContainer" class="card"></div>
-        </section>
+        <nav class="tabs" role="tablist">
+            <button class="tab active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+            <button class="tab" data-tab="classes"><span class="icon">🏫</span><span>Classes</span></button>
+            <button class="tab" data-tab="students"><span class="icon">👥</span><span>Students</span></button>
+            <button class="tab" data-tab="quizzes"><span class="icon">📝</span><span>Quizzes</span></button>
+            <button class="tab" data-tab="live"><span class="icon">🎥</span><span>Live Sessions</span></button>
+            <button class="tab" data-tab="files"><span class="icon">📁</span><span>Files</span></button>
+            <button class="tab" data-tab="analytics"><span class="icon">📈</span><span>Analytics</span></button>
+        </nav>
 
-        <section id="tab-downloads" class="panel" aria-labelledby="Downloads">
-            <h2>Offline Downloads</h2>
-            <button id="prefetchBtn" class="btn">Download Example Bundle</button>
-            <ul id="downloadList" class="list"></ul>
-        </section>
-    </main>
+        <main class="content">
+            <section id="tab-dashboard" class="panel active" aria-labelledby="Dashboard">
+                <div class="dashboard">
+                    <aside class="sidebar card" id="sidebar">
+                        <div class="brand">Teacher Portal <button id="sideClose" class="chip" style="float:right">✖</button></div>
+                        <nav class="side-nav">
+                            <button class="side-item active" data-panel="overview">Overview</button>
+                            <button class="side-item" data-panel="recent-activity">Recent Activity</button>
+                            <button class="side-item" data-panel="quick-actions">Quick Actions</button>
+                            <button class="side-item" data-panel="notifications">Notifications</button>
+                            <button class="side-item" data-panel="settings">Settings</button>
+                        </nav>
+                    </aside>
+                    <section class="main">
+                        <div class="topbar card">
+                            <button id="sideOpen" class="btn-outline" style="margin-right:8px">☰</button>
+                            <input type="search" class="search" id="globalSearch" placeholder="Search students, classes, quizzes..." />
+                            <button id="searchBtn" class="btn" title="Search" style="margin-left:8px">🔍</button>
+                        </div>
+                        <div class="welcome card">
+                            <div>
+                                <h3>Welcome Back, Teacher!</h3>
+                                <p class="muted">Manage your classes and track student progress</p>
+                                <div class="actions">
+                                    <button class="btn" id="createClassBtn">Create Class</button>
+                                    <button class="btn-outline" id="startLiveBtn">Start Live Session</button>
+                                </div>
+                            </div>
+                            <div class="cube">📚</div>
+                        </div>
+                        <div class="card side-widgets" id="contextPanel">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-number" id="totalClasses">0</div>
+                                    <div class="stat-label">Classes</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number" id="totalStudents">0</div>
+                                    <div class="stat-label">Students</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number" id="totalQuizzes">0</div>
+                                    <div class="stat-label">Quizzes</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number" id="liveSessions">0</div>
+                                    <div class="stat-label">Live Sessions</div>
+                                </div>
+                            </div>
+                            <div class="upcoming">
+                                <div class="title">Recent Activity</div>
+                                <ul id="recentActivity" class="list"></ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+            <section id="tab-classes" class="panel">
+                <div class="section-header">
+                    <h2>Manage Classes</h2>
+                    <div class="header-actions">
+                        <button id="createClassBtn2" class="btn btn-primary">Create New Class</button>
+                    </div>
+                </div>
+                <div id="classesList" class="classes-grid">
+                    <div class="empty-state">
+                        <p>No classes created yet. Create your first class to get started!</p>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-students" class="panel">
+                <div class="section-header">
+                    <h2>Student Management</h2>
+                    <div class="header-actions">
+                        <button id="addStudentBtn" class="btn btn-primary">Add Student</button>
+                    </div>
+                </div>
+                <div id="studentsList" class="students-grid">
+                    <div class="empty-state">
+                        <p>No students added yet. Add your first student to get started!</p>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-quizzes" class="panel">
+                <div class="section-header">
+                    <h2>Quiz Management</h2>
+                    <div class="header-actions">
+                        <button id="createQuizBtn" class="btn btn-primary">Create Quiz</button>
+                    </div>
+                </div>
+                <div id="quizzesList" class="quizzes-grid">
+                    <div class="empty-state">
+                        <p>No quizzes created yet. Create your first quiz to get started!</p>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-live" class="panel">
+                <div class="section-header">
+                    <h2>Live Sessions</h2>
+                    <div class="header-actions">
+                        <button id="startLiveSessionBtn" class="btn btn-primary">Start Live Session</button>
+                        <button id="startRecordingBtn" class="btn btn-secondary">Start Recording</button>
+                    </div>
+                </div>
+                <div class="live-container">
+                    <div class="video-container">
+                        <video id="localVideo" autoplay muted></video>
+                        <video id="remoteVideo" autoplay></video>
+                    </div>
+                    <div class="live-controls">
+                        <button id="toggleCamera" class="btn btn-outline">Toggle Camera</button>
+                        <button id="toggleMicrophone" class="btn btn-outline">Toggle Microphone</button>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-files" class="panel">
+                <div class="section-header">
+                    <h2>File Management</h2>
+                    <div class="header-actions">
+                        <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx,.doc,.docx" style="display: none;">
+                        <button id="uploadBtn" class="btn btn-primary">Upload Files</button>
+                    </div>
+                </div>
+                <div id="filesList" class="files-grid">
+                    <div class="empty-state">
+                        <p>No files uploaded yet. Upload your first file to get started!</p>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-analytics" class="panel">
+                <div class="section-header">
+                    <h2>Analytics & Reports</h2>
+                </div>
+                <div class="analytics-container">
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>Student Performance</h3>
+                            <div class="chart-placeholder">📊 Performance Chart</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Class Engagement</h3>
+                            <div class="chart-placeholder">📈 Engagement Chart</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Quiz Statistics</h3>
+                            <div class="chart-placeholder">📋 Quiz Stats</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
-    <footer class="app-footer">Made for low-bandwidth learning • PWA</footer>
-
-    <button id="fab" class="fab" title="Quick Download">⬇️</button>
-    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
+    <!-- Profile Modal -->
     <dialog id="profileModal" class="profile-modal">
         <div class="profile-page">
             <div class="profile-header">
-                <h2>Welcome, Student</h2>
+                <h2 id="profileTitle">Profile</h2>
                 <div class="profile-actions">
-                    <div class="status-chip">Status: Active</div>
-                    <div class="status-chip">Grade: A+</div>
-                    <button class="btn-outline" id="uploadBtn">Upload</button>
+                    <button class="btn-outline" onclick="closeProfileModal()">Close</button>
                 </div>
             </div>
-            
             <div class="profile-main">
                 <div class="profile-form">
-                    <div class="form-grid">
-                        <div class="form-column">
-                            <label>Full Name
-                                <input id="profileName" type="text" placeholder="Enter full name">
-                            </label>
-                            <label>Student ID
-                                <input id="profileStudentId" type="text" placeholder="e.g., STU2025001">
-                            </label>
-                            <label>Class & Section
-                                <input id="profileClassSection" type="text" placeholder="e.g., 10th A">
-                            </label>
-                        </div>
-                        <div class="form-column">
-                            <label>Date of Birth
-                                <input id="profileDob" type="date">
-                            </label>
-                            <label>Phone Number
-                                <input id="profilePhone" type="tel" placeholder="e.g., +91 98765 43210">
-                            </label>
-                            <label>Profile Photo
-                                <div class="photo-upload">
-                                    <img id="pfpPreview" src="" alt="profile" class="profile-photo">
-                                    <label class="btn-outline upload-label">
-                                        Upload Photo
-                                        <input id="pfpInput" type="file" accept="image/*" style="display:none">
-                                    </label>
-                                </div>
-                            </label>
-                        </div>
+                    <div class="form-column">
+                        <label>Full Name
+                            <input id="profileName" type="text" placeholder="Enter full name">
+                        </label>
+                        <label>Email
+                            <input id="profileEmail" type="email" placeholder="user@example.com">
+                        </label>
+                        <label id="profileRoleLabel" style="display: none;">Role
+                            <input id="profileRole" type="text" readonly>
+                        </label>
+                        <label id="profileSubjectLabel" style="display: none;">Subject
+                            <input id="profileSubject" type="text" placeholder="e.g., Mathematics">
+                        </label>
+                        <label id="profileExperienceLabel" style="display: none;">Experience
+                            <input id="profileExperience" type="text" placeholder="e.g., 5 years">
+                        </label>
+                        <label>Phone
+                            <input id="profilePhone" type="tel" placeholder="e.g., +91 98765 43210">
+                        </label>
                     </div>
                     <div class="form-actions">
                         <button class="btn-outline" value="cancel">Cancel</button>
@@ -177,30 +398,6 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="profile-stats">
-                <div class="stat-card">
-                    <h3>Learning Progress</h3>
-                    <div class="stat-content">
-                        <div class="stat-icon">📚</div>
-                        <div class="stat-text">
-                            <span class="stat-number" id="classesJoined">0</span>
-                            <span class="stat-label">Classes Joined</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <h3>This Semester</h3>
-                    <div class="stat-content">
-                        <div class="stat-icon">🎯</div>
-                        <div class="stat-text">
-                            <span class="stat-number" id="quizzesCompleted">0</span>
-                            <span class="stat-label">Quizzes Completed</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <div class="profile-footer">
                 <button id="logoutBtn" class="btn-outline logout-btn">Logout</button>
             </div>
@@ -209,6 +406,6 @@
 
     <script src="src/idb.js"></script>
     <script src="src/api.js"></script>
-    <script src="src/app.js" defer></script>
+    <script src="src/unified-app.js"></script>
 </body>
 </html>

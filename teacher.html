@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Teacher Dashboard</title>
+    <meta name="theme-color" content="#0d47a1">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1>Teacher Dashboard</h1>
+        <div class="header-right">
+            <div id="liveClock" class="chip"></div>
+            <button id="installBtn" class="btn btn-outline" hidden>Install App</button>
+            <div class="avatar header-avatar" title="Profile">👨‍🏫</div>
+        </div>
+    </header>
+    <section class="hero">
+        <div class="hero-inner">
+            <h2 class="hero-title">Teach anywhere, even on 2G</h2>
+            <p class="hero-sub">Create classes, manage students, conduct live sessions.</p>
+        </div>
+        <svg class="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,64L80,53.3C160,43,320,21,480,37.3C640,53,800,107,960,117.3C1120,128,1280,96,1360,80L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" fill="url(#g)" opacity="0.7"></path>
+            <defs>
+                <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="#1565c0"/>
+                    <stop offset="100%" stop-color="#2196f3"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </section>
+
+    <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+        <button class="tab" data-tab="classes"><span class="icon">🏫</span><span>Classes</span></button>
+        <button class="tab" data-tab="students"><span class="icon">👥</span><span>Students</span></button>
+        <button class="tab" data-tab="quizzes"><span class="icon">📝</span><span>Quizzes</span></button>
+        <button class="tab" data-tab="live"><span class="icon">🎥</span><span>Live Sessions</span></button>
+        <button class="tab" data-tab="files"><span class="icon">📁</span><span>Files</span></button>
+        <button class="tab" data-tab="analytics"><span class="icon">📈</span><span>Analytics</span></button>
+    </nav>
+
+    <main class="content">
+        <!-- Dashboard Section -->
+        <section id="tab-dashboard" class="panel active" aria-labelledby="Dashboard">
+            <div class="dashboard">
+                <aside class="sidebar card" id="sidebar">
+                    <div class="brand">Teacher Portal <button id="sideClose" class="chip" style="float:right">✖</button></div>
+                    <nav class="side-nav">
+                        <button class="side-item active" data-panel="overview">Overview</button>
+                        <button class="side-item" data-panel="recent-activity">Recent Activity</button>
+                        <button class="side-item" data-panel="quick-actions">Quick Actions</button>
+                        <button class="side-item" data-panel="notifications">Notifications</button>
+                        <button class="side-item" data-panel="settings">Settings</button>
+                    </nav>
+                </aside>
+                <section class="main">
+                    <div class="topbar card">
+                        <button id="sideOpen" class="btn-outline" style="margin-right:8px">☰</button>
+                        <input type="search" class="search" id="globalSearch" placeholder="Search students, classes, quizzes..." />
+                        <button id="searchBtn" class="btn" title="Search" style="margin-left:8px">🔍</button>
+                    </div>
+                    <div class="welcome card">
+                        <div>
+                            <h3>Welcome Back, Teacher!</h3>
+                            <p class="muted">Manage your classes and track student progress</p>
+                            <div class="actions">
+                                <button class="btn" id="createClassBtn">Create Class</button>
+                                <button class="btn-outline" id="startLiveBtn">Start Live Session</button>
+                            </div>
+                        </div>
+                        <div class="cube">📚</div>
+                    </div>
+                    <div class="card side-widgets" id="contextPanel">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalClasses">0</div>
+                                <div class="stat-label">Classes</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalStudents">0</div>
+                                <div class="stat-label">Students</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalQuizzes">0</div>
+                                <div class="stat-label">Quizzes</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="liveSessions">0</div>
+                                <div class="stat-label">Live Sessions</div>
+                            </div>
+                        </div>
+                        <div class="upcoming">
+                            <div class="title">Recent Activity</div>
+                            <ul id="recentActivity" class="list"></ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- Classes Section -->
+        <section id="tab-classes" class="panel">
+            <div class="section-header">
+                <h2>Manage Classes</h2>
+                <div class="header-actions">
+                    <button id="createClassBtn2" class="btn btn-primary">Create New Class</button>
+                </div>
+            </div>
+            <div id="classesList" class="classes-grid">
+                <div class="empty-state">
+                    <p>No classes created yet. Create your first class to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Students Section -->
+        <section id="tab-students" class="panel">
+            <div class="section-header">
+                <h2>Student Management</h2>
+                <div class="header-actions">
+                    <button id="addStudentBtn" class="btn btn-primary">Add Student</button>
+                </div>
+            </div>
+            <div id="studentsList" class="students-grid">
+                <div class="empty-state">
+                    <p>No students added yet. Add your first student to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quizzes Section -->
+        <section id="tab-quizzes" class="panel">
+            <div class="section-header">
+                <h2>Quiz Management</h2>
+                <div class="header-actions">
+                    <button id="createQuizBtn" class="btn btn-primary">Create Quiz</button>
+                </div>
+            </div>
+            <div id="quizzesList" class="quizzes-grid">
+                <div class="empty-state">
+                    <p>No quizzes created yet. Create your first quiz to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Sessions Section -->
+        <section id="tab-live" class="panel">
+            <div class="section-header">
+                <h2>Live Sessions</h2>
+                <div class="header-actions">
+                    <button id="startLiveSessionBtn" class="btn btn-primary">Start Live Session</button>
+                    <button id="startRecordingBtn" class="btn btn-secondary">Start Recording</button>
+                </div>
+            </div>
+            <div class="live-container">
+                <div class="video-container">
+                    <video id="localVideo" autoplay muted></video>
+                    <video id="remoteVideo" autoplay></video>
+                </div>
+                <div class="live-controls">
+                    <button id="toggleCamera" class="btn btn-outline">Toggle Camera</button>
+                    <button id="toggleMicrophone" class="btn btn-outline">Toggle Microphone</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Files Section -->
+        <section id="tab-files" class="panel">
+            <div class="section-header">
+                <h2>File Management</h2>
+                <div class="header-actions">
+                    <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx,.doc,.docx" style="display: none;">
+                    <button id="uploadBtn" class="btn btn-primary">Upload Files</button>
+                </div>
+            </div>
+            <div id="filesList" class="files-grid">
+                <div class="empty-state">
+                    <p>No files uploaded yet. Upload your first file to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="tab-analytics" class="panel">
+            <div class="section-header">
+                <h2>Analytics & Reports</h2>
+            </div>
+            <div class="analytics-container">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Student Performance</h3>
+                        <div class="chart-placeholder">📊 Performance Chart</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Class Engagement</h3>
+                        <div class="chart-placeholder">📈 Engagement Chart</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Quiz Statistics</h3>
+                        <div class="chart-placeholder">📋 Quiz Stats</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Profile Modal -->
+    <dialog id="profileModal" class="profile-modal">
+        <div class="profile-page">
+            <div class="profile-header">
+                <h2>Teacher Profile</h2>
+                <div class="profile-actions">
+                    <button class="btn-outline" onclick="closeProfileModal()">Close</button>
+                </div>
+            </div>
+            <div class="profile-main">
+                <div class="profile-form">
+                    <div class="form-column">
+                        <label>Full Name
+                            <input id="profileName" type="text" placeholder="Enter full name">
+                        </label>
+                        <label>Email
+                            <input id="profileEmail" type="email" placeholder="teacher@example.com">
+                        </label>
+                        <label>Subject
+                            <input id="profileSubject" type="text" placeholder="e.g., Mathematics">
+                        </label>
+                        <label>Experience
+                            <input id="profileExperience" type="text" placeholder="e.g., 5 years">
+                        </label>
+                        <label>Phone
+                            <input id="profilePhone" type="tel" placeholder="e.g., +91 98765 43210">
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-outline" value="cancel">Cancel</button>
+                        <button id="saveProfile" class="btn">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-footer">
+                <button id="logoutBtn" class="btn-outline logout-btn">Logout</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="src/idb.js"></script>
+    <script src="src/api.js"></script>
+    <script src="src/teacher-app.js"></script>
+</body>
+</html>
